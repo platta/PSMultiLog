@@ -15,10 +15,10 @@
 @{
 
 # Script module or binary module file associated with this manifest
-ModuleToProcess = 'PSLogging.psm1'
+RootModule = 'PSLogging.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.0'
+ModuleVersion = '1.0.1'
 
 # ID used to uniquely identify this module
 GUID = '6792caca-e1b3-4a6b-b1bc-979f9935e95f'

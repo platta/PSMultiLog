@@ -164,12 +164,14 @@ Function Stop-FileLog {
 
     This command turns off file logging.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     Param ()
 
     Process {
-        $Script:Settings["File"].Enabled = $false
-        $Script:Settings["File"].FilePath = $null
+        if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
+            $Script:Settings["File"].Enabled = $false
+            $Script:Settings["File"].FilePath = $null
+        }
     }
 }
 
@@ -254,17 +256,19 @@ Function Stop-EmailLog {
     This command stops the recording of log entries but retains any that were
     already recorded.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     Param (
         [Parameter()]
         [switch]$RetainEntryCache
     )
 
     Process {
-        $Script:Settings["Email"].Enabled = $false
+        if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
+            $Script:Settings["Email"].Enabled = $false
 
-        if (!$RetainEntryCache) {
-            $Script:LogEntries = @()
+            if (!$RetainEntryCache) {
+                $Script:LogEntries = @()
+            }
         }
     }
 }
@@ -351,34 +355,34 @@ Function Send-EmailLog {
         [string]$From,
 
         [Parameter()]
-        [string]$Subject,
+        [string]$Subject = "",
 
         [Parameter()]
-        [string]$Message,
-
-        [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$TriggerLogLevel,
+        [string]$Message = "",
 
         [Parameter()]
         [ValidateSet("Information", "Warning", "Error")]
-        [string]$SendLogLevel = Error,
+        [string]$TriggerLogLevel = "Error",
+
+        [Parameter()]
+        [ValidateSet("Information", "Warning", "Error")]
+        [string]$SendLogLevel = "Error",
 
         [Parameter()]
         [switch]$RetainEntryCache = $false,
 
         [Parameter()]
-        [switch]$SendOnEmpty = $false
+        [switch]$SendOnEmpty = $false,
 
         [Parameter()]
         [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel,
+        [string]$LogLevel = "Error"
     )
 
     Begin {
         if ($LogLevel) {
             # Deprecated functionality.
-            Write-Warning -Message [string.Format($Script:r.Parameter_F0_Deprecated_F1, "LogLevel", "TriggerLogLevel and SendLogLevel")]
+            Write-Warning -Message ([string]::Format($Script:r.Parameter_F0_Deprecated_F1, "LogLevel", "TriggerLogLevel and SendLogLevel"))
             $TriggerLogLevel = $LogLevel
             $SendLogLevel = $LogLevel
         }
@@ -567,13 +571,15 @@ Function Stop-EventLogLog {
 
     This command turns off Event Log logging.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     Param ()
 
     Process {
-        $Script:Settings["EventLog"].Enabled = $false
-        $Script:Settings["EventLog"].LogName = $null
-        $Script:Settings["EventLog"].Source = $null
+        if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
+            $Script:Settings["EventLog"].Enabled = $false
+            $Script:Settings["EventLog"].LogName = $null
+            $Script:Settings["EventLog"].Source = $null
+        }
     }
 }
 
@@ -634,11 +640,13 @@ Function Stop-HostLog {
 
     This command turns off host logging.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     Param ()
 
     Process {
-        $Script:Settings["Host"].Enabled = $false
+        if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
+            $Script:Settings["Host"].Enabled = $false
+        }
     }
 }
 
@@ -684,7 +692,7 @@ Function Start-PassThruLog {
     }
 }
 
-Function Disable-PassThruLog {
+Function Stop-PassThruLog {
     <#
     .SYNOPSIS
     Turns off "Pass Thru" logging.
@@ -702,11 +710,13 @@ Function Disable-PassThruLog {
 
     This command turns off "Pass Thru" logging.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     Param ()
 
     Process {
-        $Script:Settings["PassThru"].Enabled = $false
+        if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
+            $Script:Settings["PassThru"].Enabled = $false
+        }
     }
 }
 
@@ -765,7 +775,7 @@ Function Write-Log {
         [string]$Message,
 
         [Parameter()]
-        [System.Exception]$Exception,
+        [System.Exception]$Exception = $null,
 
         [Parameter()]
         [int]$EventId = 1000
@@ -828,6 +838,7 @@ Function Get-LogLevel {
     Integer.
     #>
     [CmdletBinding()]
+    [OutputType([int])]
     Param (
         [Parameter(Mandatory = $true)]
         [ValidateSet("Information", "Warning", "Error")]
@@ -875,6 +886,7 @@ Function Format-LogMessage {
     String.
     #>
     [CmdletBinding()]
+    [OutputType([string])]
     Param (
         [Parameter(Mandatory = $true)]
         [psobject]$Entry,
@@ -1120,11 +1132,16 @@ Function ConvertTo-HtmlUnorderedList {
 
     .PARAMETER InputObject
     Specifies one or more objects to write to the unordered list.
+
+    .OUTPUTS
+    String.
     #>
     [CmdletBinding()]
+    [OutputType([string])]
     Param (
         [Parameter()]
-        [scriptblock]$FormatScript,
+
+        [scriptblock]$FormatScript = $null,
 
         [Parameter(
             Mandatory = $true,
@@ -1177,7 +1194,7 @@ Function Enable-FileLog {
     )
 
     Process {
-        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Start-FileLog")
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Start-FileLog"))
         Start-FileLog -FilePath $FilePath -LogLevel $LogLevel -Append:$Append
     }
 }
@@ -1187,7 +1204,7 @@ Function Disable-FileLog {
     Param ()
 
     Process {
-        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Stop-FileLog")
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Stop-FileLog"))
         Stop-FileLog
     }   
 }
@@ -1200,7 +1217,7 @@ Function Enable-EmailLog {
     )
 
     Process {
-        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Start-EmailLog")
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Start-EmailLog"))
         Start-EmailLog -ClearEntryCache:$ClearEntryCache
     }
 }
@@ -1213,7 +1230,7 @@ Function Disable-EmailLog {
     )
 
     Process {
-        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Stop-EmailLog")
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Stop-EmailLog"))
         Stop-EmailLog
     }
 }
@@ -1233,7 +1250,7 @@ Function Enable-EventLogLog {
     )
 
     Process {
-        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Start-EventLogLog")
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Start-EventLogLog"))
         Start-EventLogLog -Source $Source -LogLevel $LogLevel -LogName $LogName
     }
 }
@@ -1243,7 +1260,7 @@ Function Disable-EventLogLog {
     Param ()
 
     Process {
-        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Stop-EventLogLog")
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Stop-EventLogLog"))
         Stop-EventLogLog
     }
 }
@@ -1257,7 +1274,7 @@ Function Enable-HostLog {
     )
 
     Process {
-        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Start-HostLog")
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Start-HostLog"))
         Enable-HostlLog -LogLevel $LogLevel
     }
 }
@@ -1267,7 +1284,7 @@ Function Disable-HostLog {
     Param ()
 
     Process {
-        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Stop-HostLog")
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Stop-HostLog"))
         Stop-HostLog
     }
 }
@@ -1281,7 +1298,7 @@ Function Enable-PassThruLog {
     )
 
     Process {
-        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Start-PassThruLog")
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Start-PassThruLog"))
         Start-PassThruLog -LogLevel $LogLevel
     }
 }
@@ -1291,7 +1308,7 @@ Function Disable-PassThruLog {
     Param ()
 
     Process {
-        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Stop-PassThruLog")
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Stop-PassThruLog"))
         Stop-PassThruLog
     }
 }

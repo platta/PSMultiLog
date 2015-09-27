@@ -28,4 +28,6 @@ NoEntriesToReport = No Entries to Report
 
 CmdletDeprecated_F0 = This Cmdlet is deprecated and will be removed in a future version. Please use {0} instead.
 Parameter_F0_Deprecated_F1 = The parameter {0} is deprecated and will be removed in a future version. Please use {1} instead.
+
+CurrentSession = Current Session
 '@
