@@ -5,14 +5,14 @@ A module that provides a single entry point to output a log to multiple sources.
 .EXAMPLE
 C:\PS> Import-Module PSLogging
 
-C:\PS> Enable-FileLog -FilePath c:\ps\info.log
+C:\PS> Start-FileLog -FilePath c:\ps\info.log
 
 C:\PS> Write-Log -EntryType Information -Message "Test Log Entry"
 #>
 
 # Load strings file
 $CurrentPath = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
-Import-LocalizedData -BindingVariable r -FileName Strings.psd1 -BaseDirectory (Join-Path -Path $CurrentPath -ChildPath "I18n")
+Import-LocalizedData -BindingVariable r -FileName Strings.psd1 -BaseDirectory (Join-Path -Path $CurrentPath -ChildPath "Localized")
 $Script:r = $r
 
 # Array to hold log entries that will be e-mailed when using e-mail logging.
@@ -48,82 +48,60 @@ $Script:Settings = @{
     }
 }
 
-Function Get-LogLevel {
+#-------------------------------------------------------------------------------
+# Public Cmdlets
+#-------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+# File Logging
+Function Start-FileLog {
     <#
     .SYNOPSIS
-    Gets the integer representation of the specified entry type.
+    Begins to log output to file.
 
     .DESCRIPTION
-    Gets the integer representation of the specified entry type.
-    Used for filtering log output.
-
-    .PARAMETER EntryType
-    Specifies the entry type to evaluate.
-
-    .OUTPUTS
-    Integer.
-    #>
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory = $true)]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$EntryType
-    )
-
-    Process {
-        switch ($EntryType) {
-            "Information" {
-                return 2
-            }
-
-            "Warning" {
-                return 1
-            }
-
-            "Error" {
-                return 0
-            }
-        }
-    }
-}
-
-Function Enable-FileLog {
-    <#
-    .SYNOPSIS
-    Enables log output to file.
-
-    .DESCRIPTION
-    Enables log output to file. Only entries with a severity at or above the specified level will be written.
+    Begins to log output to file. Only entries with a severity at or above the
+    specified level will be written.
 
     .PARAMETER FilePath
     Specifies the path and name of the log file that will be written.
 
     .PARAMETER LogLevel
-    Specifies the minimum log entry severity to include in the file log. The default value is "Error".
+    Specifies the minimum log entry severity to include in the file log. The
+    default value is "Error".
     
     .PARAMETER Append
-    Specifies that the file at <FilePath> should not be deleted if it already exists. New entries will be appended to the end of the file.
+    Specifies that the file at <FilePath> should not be deleted if it already
+    exists. New entries will be appended to the end of the file.
+
+    .OUTPUTS
+    None.
 
     .EXAMPLE
-    C:\PS> Enable-FileLog -FilePath c:\ps\data.log
+    C:\PS> Start-FileLog -FilePath c:\ps\data.log
 
     -----------
 
-    This command shows the minimum requirements for enabling file logging. It will replace any existing log file of the same name and will only log entries of type "Error".
+    This command shows the minimum requirements for enabling file logging. It
+    will replace any existing log file of the same name and will only log
+    entries of type "Error".
 
     .EXAMPLE
-    C:\PS> Enable-FileLog -FilePath c:\ps\data.log -Append
+    C:\PS> Start-FileLog -FilePath c:\ps\data.log -Append
 
     -----------
 
-    This command will leave an existing log file in place if it exists and append new log entries of type "Error" to the end of the file.
+    This command will leave an existing log file in place if it exists and
+    append new log entries of type "Error" to the end of the file.
 
     .EXAMPLE
-    C:\PS> Enable-FileLog -FilePath c:\ps\data.log -LogLevel Warning -Append
+    C:\PS> Start-FileLog -FilePath c:\ps\data.log -LogLevel Warning -Append
 
     -----------
 
-    This command will leave an existing log file in place if it exists and append new log entries of type "Warning" or type "Error" to the end of the file.
+    This command will leave an existing log file in place if it exists and
+    append new log entries of type "Warning" or type "Error" to the end of the
+    file.
     #>
     [CmdletBinding()]
     Param (
@@ -167,20 +145,24 @@ Function Enable-FileLog {
     }
 }
 
-Function Disable-FileLog {
+Function Stop-FileLog {
     <#
     .SYNOPSIS
-    Disables log output to file.
+    Stops writing log output to file.
 
     .DESCRIPTION
-    Disables log output to file. Any log data that has already been written will remain.
+    Stops writing log output to file. Any log data that has already been written
+    will remain.
+
+    .OUTPUTS
+    None.
 
     .EXAMPLE
-    C:\PS> Disable-FileLog
+    C:\PS> Stop-FileLog
 
     -----------
 
-    This command disables file logging.
+    This command turns off file logging.
     #>
     [CmdletBinding()]
     Param ()
@@ -191,30 +173,40 @@ Function Disable-FileLog {
     }
 }
 
-Function Enable-EmailLog {
+
+#-------------------------------------------------------------------------------
+# E-mail Logging
+Function Start-EmailLog {
     <#
     .SYNOPSIS
-    Enables the recording of log events so that they can be e-mailed.
+    Starts recording log events so that they can be e-mailed.
 
     .DESCRIPTION
-    Enables the recording of log events so that they can be e-mailed. A separate command must be issued to actually send an e-mail.
+    Starts recording log events so that they can be e-mailed. A separate Cmdlet
+    (Send-EmailLog) must be issued to actually send an e-mail.
 
     .PARAMETER ClearEntryCache
-    Specifies whether any recorded log entries from the cache of entries to be e-mailed should be removed.
+    Specifies whether any existing recorded log entries from the cache of
+    entries to be e-mailed should be removed.
+
+    .OUTPUTS
+    None.
 
     .EXAMPLE
-    C:\PS> Enable-EmailLog
+    C:\PS> Start-EmailLog
 
     -----------
 
-    This command enables the recording of log events so that they can be e-mailed. If any entries were already in the cache, they will remain there.
+    This command begins the recording of log events so that they can be
+    e-mailed. If any entries were already in the cache, they will remain there.
 
     .EXAMPLE
-    C:\PS> Enable-EmailLog -ClearEntryCache
+    C:\PS> Start-EmailLog -ClearEntryCache
 
     -----------
 
-    This command enables the recording of log events so that they can be e-mailed and clears the cache of recorded entries
+    This command begins the recording of log events so that they can be e-mailed
+    and clears the cache of recorded entries.
     #>
     [CmdletBinding()]
     Param (
@@ -231,30 +223,36 @@ Function Enable-EmailLog {
     }
 }
 
-Function Disable-EmailLog {
+Function Stop-EmailLog {
     <#
     .SYNOPSIS
-    Disables the recording of log events to the e-mail cache.
+    Stops the recording of log events to the e-mail cache.
 
     .DESCRIPTION
-    Disables the recording of log events to the e-mail cache. By default, the cache is also cleared.
+    Stops the recording of log events to the e-mail cache. By default, the cache
+    is also cleared.
 
     .PARAMETER RetainEntryCache
-    Specifies whether any log entries that have already been recorded should be kept or discarded.
+    Specifies whether any log entries that have already been recorded should be
+    kept or discarded.
+
+    .OUTPUTS
+    None.
 
     .EXAMPLE
-    C:\PS> Disable-EmailLog
+    C:\PS> Stop-EmailLog
 
     -----------
 
-    This command disables the recording of log entries and clears the e-mail cache.
+    This command stops the recording of log entries and clears the e-mail cache.
 
     .EXAMPLE
-    C:\PS> Disable-EmailLog -RetainEntryCache
+    C:\PS> Stop-EmailLog -RetainEntryCache
 
     -----------
 
-    This command disables the recording of log entries but retains any that were already recorded.
+    This command stops the recording of log entries but retains any that were
+    already recorded.
     #>
     [CmdletBinding()]
     Param (
@@ -271,19 +269,239 @@ Function Disable-EmailLog {
     }
 }
 
-Function Enable-EventLogLog {
+Function Send-EmailLog {
     <#
     .SYNOPSIS
+    Sends an e-mail containing one or more of the log messages collected since
+    e-mail logging was enabled.
 
     .DESCRIPTION
+    Sends an e-mail containing one or more of the log messages collected since
+    e-mail logging was enabled in the current session. Parameters can be used to
+    control the severity of log message required to trigger sending an e-mail
+    and also what levels are sent when an e-mail is triggered.
 
-    .PARAMETER Source
+    .PARAMETER SmtpServer
+    Specifies the SMTP server to use to send e-mail.
 
-    .PARAMETER LogLevel
+    .PARAMETER To
+    Specifies one or more recipients for the e-mail.
 
-    .PARAMETER LogName
+    .PARAMETER From
+    Specifies a from address to use when sending the e-mail. Note that some SMTP
+    servers require this to be a valid mailbox.
+
+    .PARAMETER Subject
+    Specifies the subject of the e-mail message.
+
+    .PARAMETER Message
+    Specifies additional text to include in the e-mail message before the log
+    data.
+
+    .PARAMETER TriggerLogLevel
+    Specifies the condition for sending an e-mail. A log entry at or above the
+    specified level must have been recorded for an e-mail to be sent.
+
+    .PARAMETER SendLogLevel
+    Specifies what log events to include when sending an e-mail. This can be
+    different than the TriggerLogLevel.
+
+    .PARAMETER RetainEntryCache
+    Specifies whether or not to keep the log entries that have been recorded.
+    The default behavior is to clear them.
+
+    .PARAMETER SendOnEmpty
+    Specifies whether or not to send an e-mail if there are no log events that
+    match the SendLogLevel parameter.
+
+    .OUTPUTS
+    None.
 
     .EXAMPLE
+    C:\PS> Send-EmailLog -SmtpServer smtp.contoso.com -To ellen@contoso.com -From info@contoso.com
+
+    -----------
+
+    This command shows the minimum requirements for e-mailing a log. A default
+    subject will be used and no extra message will be added. Because the
+    TriggerLogLevel parameter was not provided, the module will try to send an
+    e-mail no matter what, using the default SendLogLevel of Error.
+
+    .EXAMPLE
+    C:\PS> Send-EmailLog -SmtpServer smtp.contoso.com -To ellen@contoso.com -From info@contoso.com -TriggerLogLevel Error -SendLogLevel Information
+
+    -----------
+
+    This command will cause the module only to send an e-mail if any errors were
+    encountered, but when sending an e-mail it will send the full log.
+    #>
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string]$SmtpServer,
+
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
+        [string[]]$To,
+
+        [Parameter(Mandatory = $true)]
+        [string]$From,
+
+        [Parameter()]
+        [string]$Subject,
+
+        [Parameter()]
+        [string]$Message,
+
+        [Parameter()]
+        [ValidateSet("Information", "Warning", "Error")]
+        [string]$TriggerLogLevel,
+
+        [Parameter()]
+        [ValidateSet("Information", "Warning", "Error")]
+        [string]$SendLogLevel = Error,
+
+        [Parameter()]
+        [switch]$RetainEntryCache = $false,
+
+        [Parameter()]
+        [switch]$SendOnEmpty = $false
+
+        [Parameter()]
+        [ValidateSet("Information", "Warning", "Error")]
+        [string]$LogLevel,
+    )
+
+    Begin {
+        if ($LogLevel) {
+            # Deprecated functionality.
+            Write-Warning -Message [string.Format($Script:r.Parameter_F0_Deprecated_F1, "LogLevel", "TriggerLogLevel and SendLogLevel")]
+            $TriggerLogLevel = $LogLevel
+            $SendLogLevel = $LogLevel
+        }
+
+        # Start by checking if anything was logged that fits our trigger level.
+        $TriggerLogLevelNumber = Get-LogLevel -EntryType $TriggerLogLevel
+        if ((!$PSBoundParameters.ContainsKey("TriggerLogLevel") -and !$PSBoundParameters.ContainsKey("LogLevel")) -or $Script:LogEntries | Where-Object -FilterScript { $_.LogLevel -le $TriggerLogLevelNumber }) {
+            if (!$Subject) {
+                $Subject = $Script:r.EmailLogSubject
+            }
+            $EmailBody = "<style>.log-entries {font-family: `"Lucida Console`", Monaco, monospace;font-size: 10pt;}</style><body>"
+
+            if ($Message) {
+                $EmailBody += "<p>$Message</p>"
+            }
+
+            $SendLogLevelNumber = Get-LogLevel -EntryType $SendLogLevel
+            $Entries = $Script:LogEntries | Where-Object -FilterScript { $_.LogLevel -le $SendLogLevelNumber }
+            $Empty = $false
+            if ($Entries) {
+                $EmailBody += "<div class=`"log-entries`">"
+
+                $EmailBody += $Entries | ConvertTo-HtmlUnorderedList -FormatScript {
+                    $Line = "[$($_.Timestamp.ToString("u"))] - "
+
+                    switch ($_.EntryType) {
+                        "Information" {
+                            $Line += "<span style=`"color: Teal`">$($Script:r.Info)</span>"
+                        }
+
+                        "Warning" {
+                            $Line += "<span style=`"color: GoldenRod`">$($Script:r.Warn)</span>"
+                        }
+
+                        "Error" {
+                            $Line += "<span style=`"color: Red`">$($Script:r.Errr)</span>"
+                        }
+                    }
+
+                    $Line += ": $($_.Message)"
+
+                    if ($_.Exception) {
+                        $Line += "<ul><li>$($Script:r.Message): $($_.Exception.Message)</li><li>$($Script:r.Source): $($_.Exception.Source)</li><li>$($Script:r.StackTrace):"
+
+                        if ($_.Exception.StackTrace -and $_.Exception.StackTrace.Count -gt 0) {
+                            $Line += "<ul>"
+                            foreach ($Stack in $_.Exception.StackTrace) {
+                                $Line += "<li>$Stack</li>"
+                            }
+                            $Line += "</ul>"
+                        }
+
+                        $Line += "</li><li>$($Script:r.TargetSite): $($_.Exception.TargetSite)</li></ul>"
+                    }
+
+                    $Line
+                }
+
+                $EmailBody += "</div>"
+            } else {
+                $Empty = $true
+                $EmailBody += "<p>$($Script:r.NoEntriesToReport)</p>"
+            }
+
+            $EmailBody += "</body>"
+        } else {
+            # No events occurred that would trigger us to send an e-mail.
+            break
+        }
+    }
+
+    Process {
+        if (!$Empty -or $SendOnEmpty) {
+            Send-MailMessage -From $From -To $To -Subject $Subject -Body $EmailBody -SmtpServer $SmtpServer -BodyAsHtml
+        }
+    }
+
+    End {
+        if (!$RetainEntryCache) {
+            $Script:LogEntries = @()
+        }
+    }
+}
+
+
+#-------------------------------------------------------------------------------
+# Event Log Logging
+Function Start-EventLogLog {
+    <#
+    .SYNOPSIS
+    Starts recording log events to the Windows Event Log.
+
+    .DESCRIPTION
+    Starts recording log events to the Windows Event Log. Which log is written
+    to and what source is used are configurable.
+
+    .PARAMETER Source
+    Specifies the Event Log source to record events under. If the source does
+    not exist, the module will attempt to create it, but this requires
+    administrative rights. You might need to run the script as an administrator
+    the first time to create the source, but once it exists you should not need
+    to.
+
+    .PARAMETER LogLevel
+    Specifies the minimum log entry severity to write to the Event Log. The
+    default value is "Error".
+
+    .PARAMETER LogName
+    Specifies the Windows Event Log to write events to. The default is
+    "Application"
+
+    .OUTPUTS
+    None.
+
+    .EXAMPLE
+    C:\PS> Start-EventLogLog -Source "MyScript"
+
+    -----------
+
+    This command shows the minimum required parameter set to enable Event Log
+    logging. If the "MyScript" source does not exist in the Event Log, it will
+    be created. Because the default LogLevel of "Error" is being used, only
+    errors will be written to the Event Log.
     #>
     [CmdletBinding()]
     Param (
@@ -331,7 +549,24 @@ Function Enable-EventLogLog {
     }
 }
 
-Function Disable-EventLogLog {
+Function Stop-EventLogLog {
+    <#
+    .SYNOPSIS
+    Stops writing log output to the Windows Event Log.
+
+    .DESCRIPTION
+    Stops writing log output to the Windows Event Log.
+
+    .OUTPUTS
+    None.
+
+    .EXAMPLE
+    C:\PS> Stop-EventLogLog
+
+    -----------
+
+    This command turns off Event Log logging.
+    #>
     [CmdletBinding()]
     Param ()
 
@@ -342,7 +577,32 @@ Function Disable-EventLogLog {
     }
 }
 
-Function Enable-HostLog {
+
+#-------------------------------------------------------------------------------
+# Host Logging
+Function Start-HostLog {
+    <#
+    .SYNOPSIS
+    Turns on writing formatted log events to the host display.
+
+    .DESCRIPTION
+    Starts writing formatted log events to the host display. Includes timestamp,
+    color-coded entry type, and message text.
+
+    .PARAMETER LogLevel
+    Specifies the minimum log entry severity to write to the host. The default
+    value is "Error".
+
+    .OUTPUTS
+    None.
+
+    .EXAMPLE
+    C:\PS> Start-HostLog
+
+    -----------
+
+    This command turns on host logging.
+    #>
     [CmdletBinding()]
     Param (
         [Parameter()]
@@ -356,7 +616,24 @@ Function Enable-HostLog {
     }
 }
 
-Function Disable-HostLog {
+Function Stop-HostLog {
+    <#
+    .SYNOPSIS
+    Turns off writing log messages to the host display.
+
+    .DESCRIPTION
+    Turns off writing log messages to the host display.
+
+    .OUTPUTS
+    None.
+
+    .EXAMPLE
+    C:\PS> Stop-HostLog
+
+    -----------
+
+    This command turns off host logging.
+    #>
     [CmdletBinding()]
     Param ()
 
@@ -365,7 +642,35 @@ Function Disable-HostLog {
     }
 }
 
-Function Enable-PassThruLog {
+
+#-------------------------------------------------------------------------------
+# "Pass Thru" Logging
+Function Start-PassThruLog {
+    <#
+    .SYNOPSIS
+    Turns on "Pass Thru" display of log events by writing them to other streams.
+
+    .DESCRIPTION
+    Turns on "Pass Thru" display of log events by writing them to other streams.
+    The streams used are:
+        - Information - Verbose Stream
+        - Warning - Warning Stream
+        - Error - Error stream
+
+    .PARAMETER LogLevel
+    Specifies the minimum log entry severity to write to another stream. The
+    default value is "Error".
+
+    .OUTPUTS
+    None.
+
+    .EXAMPLE
+    C:\PS> Start-PassThruLog
+
+    -----------
+
+    This command turns on "Pass Thru" logging.
+    #>
     [CmdletBinding()]
     Param (
         [Parameter()]
@@ -380,6 +685,23 @@ Function Enable-PassThruLog {
 }
 
 Function Disable-PassThruLog {
+    <#
+    .SYNOPSIS
+    Turns off "Pass Thru" logging.
+
+    .DESCRIPTION
+    Turns off "Pass Thru" logging.
+
+    .OUTPUTS
+    None.
+
+    .EXAMPLE
+    C:\PS> Stop-PassThruLog
+
+    -----------
+
+    This command turns off "Pass Thru" logging.
+    #>
     [CmdletBinding()]
     Param ()
 
@@ -388,7 +710,51 @@ Function Disable-PassThruLog {
     }
 }
 
+
+#-------------------------------------------------------------------------------
+# Main logging method
 Function Write-Log {
+    <#
+    .SYNOPSIS
+    Writes a log entry to whichever output formats are currently enabled.
+    
+    .DESCRIPTION
+    Writes a log entry to whichever output formats are currently enabled.
+
+    .PARAMETER EntryType
+    Specifies what type of log entry to write.
+
+    .PARAMETER Message
+    Specifies a descriptive message for the log entry. This is separate from
+    the message that is attached to any exception that might be included in the
+    log event.
+
+    .PARAMETER Exception
+    For error type entries, includes information about an actual exception that
+    occurred.
+
+    .PARAMETER EventId
+    For Event Log entries, specifies the Event Id to write in the Event Log. The
+    default is 1000.
+
+    .OUTPUTS
+    None.
+
+    .EXAMPLE
+    C:\PS> Write-Log -EntryType Information -Message "This is a sample log message."
+
+    -----------
+
+    This command writes a simple log message.
+
+    .EXAMPLE
+    C:\PS> Write-Log -EntryType Error -Message "An exception occurred." -Exception $_.Exception
+
+    -----------
+
+    This command, which might be used in a try/catch block, logs an error,
+    including data about the exception that was caught.
+    #>
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
@@ -442,7 +808,72 @@ Function Write-Log {
     }
 }
 
+
+#-------------------------------------------------------------------------------
+# Internal Cmdlets
+#-------------------------------------------------------------------------------
+Function Get-LogLevel {
+    <#
+    .SYNOPSIS
+    Gets the integer representation of the specified entry type.
+
+    .DESCRIPTION
+    Gets the integer representation of the specified entry type. Used for
+    filtering log output.
+
+    .PARAMETER EntryType
+    Specifies the entry type to evaluate.
+
+    .OUTPUTS
+    Integer.
+    #>
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("Information", "Warning", "Error")]
+        [string]$EntryType
+    )
+
+    Process {
+        switch ($EntryType) {
+            "Information" {
+                return 2
+            }
+
+            "Warning" {
+                return 1
+            }
+
+            "Error" {
+                return 0
+            }
+        }
+    }
+}
+
 Function Format-LogMessage {
+    <#
+    .SYNOPSIS
+    Returns a Formats a log entry for output and returns the formatted string.
+
+    .DESCRIPTION
+    Returns a Formats a log entry for output and returns the formatted string.
+    Used by the File and PassThru logging methods.
+
+    .PARAMETER Entry
+    Specifies the log entry to format.
+
+    .PARAMETER Type
+    Specifies whether or not to include the log entry type in the formatted
+    string.
+
+    .PARAMETER Exception
+    Specifies an exception object to include information about in the formatted
+    string.
+
+    .OUTPUTS
+    String.
+    #>
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
@@ -488,6 +919,22 @@ Function Format-LogMessage {
 }
 
 Function Write-FileLog {
+    <#
+    .SYNOPSIS
+    Writes a log message to a file.
+
+    .DESCRIPTION
+    Writes a log message to a file.
+
+    .PARAMETER Entry
+    Specifies the log entry to write.
+
+    .PARAMETER FilePath
+    Specifies the file to write the log entry to.
+
+    .OUTPUTS
+    None.
+    #>
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
@@ -503,6 +950,25 @@ Function Write-FileLog {
 }
 
 Function Write-EventLogLog {
+    <#
+    .SYNOPSIS
+    Creates a new Event Log object from a log message.
+
+    .DESCRIPTION
+    Creates a new Event Log object from a log message.
+
+    .PARAMETER Entry
+    Specifies the log entry which will be used to create the Event Log object.
+
+    .PARAMETER LogName
+    Specifies which log in the Windows Event Log to write to.
+
+    .PARAMETER Source
+    Specifies the source to use when creating the Event Log object.
+
+    .OUTPUTS
+    None.
+    #>
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
@@ -531,6 +997,19 @@ Function Write-EventLogLog {
 }
 
 Function Write-EmailLog {
+    <#
+    .SYNOPSIS
+    Stores a log entry in the cache used when e-mailing log data.
+
+    .DESCRIPTION
+    Stores a log entry in the cache used when e-mailing log data.
+
+    .PARAMETER Entry
+    Specifies the log entry to record.
+
+    .OUTPUTS
+    None.
+    #>
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
@@ -543,6 +1022,19 @@ Function Write-EmailLog {
 }
 
 Function Write-HostLog {
+    <#
+    .SYNOPSIS
+    Writes a log entry to the host.
+
+    .DESCRIPTION
+    Writes a log entry to the host.
+
+    .PARAMETER Entry
+    Specifies the log entry to write to the host.
+
+    .OUTPUTS
+    None.
+    #>
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
@@ -577,6 +1069,16 @@ Function Write-HostLog {
 }
 
 Function Write-PassThruLog {
+    <#
+    .SYNOPSIS
+    Writes a log entry to one of the native PowerShell Streams.
+
+    .DESCRIPTION
+    Writes a log entry to one of the native PowerShell Streams.
+
+    .PARAMETER Entry
+    Specifies the log entry to write.
+    #>
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
@@ -606,6 +1108,19 @@ Function Write-PassThruLog {
 
 
 Function ConvertTo-HtmlUnorderedList {
+    <#
+    .SYNOPSIS
+    Builds an HTML UnorderedList from the supplied input and returns its string.
+
+    .DESCRIPTION
+    Builds an HTML UnorderedList from the supplied input and returns its string.
+
+    .PARAMETER FormatScript
+    Specifies a script block to invoke for each object passed into the Cmdlet.
+
+    .PARAMETER InputObject
+    Specifies one or more objects to write to the unordered list.
+    #>
     [CmdletBinding()]
     Param (
         [Parameter()]
@@ -643,111 +1158,142 @@ Function ConvertTo-HtmlUnorderedList {
     }
 }
 
-Function Send-EmailLog {
+
+#-------------------------------------------------------------------------------
+# Deprecated Cmdlets
+#-------------------------------------------------------------------------------
+Function Enable-FileLog {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
-        [string]$SmtpServer,
-
-        [Parameter(
-            Mandatory = $true,
-            ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true
-        )]
-        [string[]]$To,
-
-        [Parameter(Mandatory = $true)]
-        [string]$From,
-
-        [Parameter()]
-        [string]$Subject,
-
-        [Parameter()]
-        [string]$Message,
+        [string]$FilePath,
 
         [Parameter()]
         [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel,
+        [string]$LogLevel = "Error",
 
         [Parameter()]
-        [switch]$RetainEntryCache,
-
-        [Parameter()]
-        [switch]$SendOnEmpty
+        [switch]$Append
     )
 
-    Begin {
-        if (!$Subject) {
-            $Subject = $Script:r.EmailLogSubject
-        }
-        $EmailBody = "<style>.log-entries {font-family: `"Lucida Console`", Monaco, monospace;font-size: 10pt;}</style><body>"
-
-        if ($Message) {
-            $EmailBody += "<p>$Message</p>"
-        }
-
-        $LogLevelNumber = Get-LogLevel -EntryType $LogLevel
-        $Entries = $Script:LogEntries | Where-Object -FilterScript { $_.LogLevel -le $LogLevelNumber }
-        $Empty = $false
-        if ($Entries) {
-            $EmailBody += "<div class=`"log-entries`">"
-
-            $EmailBody += $Entries | ConvertTo-HtmlUnorderedList -FormatScript {
-                $Line = "[$($_.Timestamp.ToString("u"))] - "
-
-                switch ($_.EntryType) {
-                    "Information" {
-                        $Line += "<span style=`"color: Teal`">$($Script:r.Info)</span>"
-                    }
-
-                    "Warning" {
-                        $Line += "<span style=`"color: GoldenRod`">$($Script:r.Warn)</span>"
-                    }
-
-                    "Error" {
-                        $Line += "<span style=`"color: Red`">$($Script:r.Errr)</span>"
-                    }
-                }
-
-                $Line += ": $($_.Message)"
-
-                if ($_.Exception) {
-                    $Line += "<ul><li>$($Script:r.Message): $($_.Exception.Message)</li><li>$($Script:r.Source): $($_.Exception.Source)</li><li>$($Script:r.StackTrace):"
-
-                    if ($_.Exception.StackTrace -and $_.Exception.StackTrace.Count -gt 0) {
-                        $Line += "<ul>"
-                        foreach ($Stack in $_.Exception.StackTrace) {
-                            $Line += "<li>$Stack</li>"
-                        }
-                        $Line += "</ul>"
-                    }
-
-                    $Line += "</li><li>$($Script:r.TargetSite): $($_.Exception.TargetSite)</li></ul>"
-                }
-
-                $Line
-            }
-
-            $EmailBody += "</div>"
-        } else {
-            $Empty = $true
-            $EmailBody += "<p>$($Script:r.NoEntriesToReport)</p>"
-        }
-
-        $EmailBody += "</body>"
-    }
-
     Process {
-        if (!$Empty -or $SendOnEmpty) {
-            Send-MailMessage -From $From -To $To -Subject $Subject -Body $EmailBody -SmtpServer $SmtpServer -BodyAsHtml
-        }
-    }
-
-    End {
-        if (!$RetainEntryCache) {
-            $Script:LogEntries = @()
-        }
+        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Start-FileLog")
+        Start-FileLog -FilePath $FilePath -LogLevel $LogLevel -Append:$Append
     }
 }
 
-Export-ModuleMember -Function Enable-*, Disable-*, Write-Log, Send-EmailLog
+Function Disable-FileLog {
+    [CmdletBinding()]
+    Param ()
+
+    Process {
+        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Stop-FileLog")
+        Stop-FileLog
+    }   
+}
+
+Function Enable-EmailLog {
+    [CmdletBinding()]
+    Param (
+        [Parameter()]
+        [switch]$ClearEntryCache
+    )
+
+    Process {
+        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Start-EmailLog")
+        Start-EmailLog -ClearEntryCache:$ClearEntryCache
+    }
+}
+
+Function Disable-EmailLog {
+    [CmdletBinding()]
+    Param (
+        [Parameter()]
+        [switch]$RetainEntryCache
+    )
+
+    Process {
+        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Stop-EmailLog")
+        Stop-EmailLog
+    }
+}
+
+Function Enable-EventLogLog {
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string]$Source,
+
+        [Parameter()]
+        [ValidateSet("Information", "Warning", "Error")]
+        [string]$LogLevel = "Error",
+
+        [Parameter()]
+        [string]$LogName = "Application"
+    )
+
+    Process {
+        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Start-EventLogLog")
+        Start-EventLogLog -Source $Source -LogLevel $LogLevel -LogName $LogName
+    }
+}
+
+Function Disable-EventLogLog {
+    [CmdletBinding()]
+    Param ()
+
+    Process {
+        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Stop-EventLogLog")
+        Stop-EventLogLog
+    }
+}
+
+Function Enable-HostLog {
+    [CmdletBinding()]
+    Param (
+        [Parameter()]
+        [ValidateSet("Information", "Warning", "Error")]
+        [string]$LogLevel = "Error"
+    )
+
+    Process {
+        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Start-HostLog")
+        Enable-HostlLog -LogLevel $LogLevel
+    }
+}
+
+Function Disable-HostLog {
+    [CmdletBinding()]
+    Param ()
+
+    Process {
+        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Stop-HostLog")
+        Stop-HostLog
+    }
+}
+
+Function Enable-PassThruLog {
+    [CmdletBinding()]
+    Param (
+        [Parameter()]
+        [ValidateSet("Information", "Warning", "Error")]
+        [string]$LogLevel = "Error"
+    )
+
+    Process {
+        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Start-PassThruLog")
+        Start-PassThruLog -LogLevel $LogLevel
+    }
+}
+
+Function Disable-PassThruLog {
+    [CmdletBinding()]
+    Param ()
+
+    Process {
+        Write-Warning -Message [string]::Format($Script:r.CmdletDeprecated_F0, "Stop-PassThruLog")
+        Stop-PassThruLog
+    }
+}
+
+Export-ModuleMember -Function Enable-*, Disable-*, Start-*, Stop-*, Write-Log, Send-EmailLog

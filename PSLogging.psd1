@@ -18,7 +18,7 @@
 ModuleToProcess = 'PSLogging.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.1.0.0'
+ModuleVersion = '1.0.0'
 
 # ID used to uniquely identify this module
 GUID = '6792caca-e1b3-4a6b-b1bc-979f9935e95f'
