@@ -4,21 +4,21 @@
 	 Created on:   	4/11/2015 5:32 PM
 	 Created by:   	Adam Platt 
 	 Organization: 	 
-	 Filename:     	PSLogging.psd1
+	 Filename:     	PSMultiLog.psd1
 	 -------------------------------------------------------------------------
 	 Module Manifest
 	-------------------------------------------------------------------------
-	 Module Name: PSLogging
+	 Module Name: PSMultiLog
 	===========================================================================
 #>
 
 @{
 
 # Script module or binary module file associated with this manifest
-RootModule = 'PSLogging.psm1'
+RootModule = 'PSMultiLog.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.1'
+ModuleVersion = '1.0.2'
 
 # ID used to uniquely identify this module
 GUID = '6792caca-e1b3-4a6b-b1bc-979f9935e95f'
@@ -33,7 +33,7 @@ CompanyName = ' '
 Copyright = '(c) 2015. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'A module to simplify logging, capable of simultanously writing logs in multiple formats.'
+Description = 'The PSMultiLog module is designed to simultaneously write log output to multiple log targets. Supported targets include logging to a file, to the Windows Event Log, and sending an e-mail. The module is used by turning on the desired log targets and then calling the Write-Log Cmdlet.'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '2.0'

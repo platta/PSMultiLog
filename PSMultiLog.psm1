@@ -3,7 +3,7 @@
 A module that provides a single entry point to output a log to multiple sources.
 
 .EXAMPLE
-C:\PS> Import-Module PSLogging
+C:\PS> Import-Module PSMultiLog
 
 C:\PS> Start-FileLog -FilePath c:\ps\info.log
 
