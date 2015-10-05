@@ -389,7 +389,7 @@ Function Send-EmailLog {
 
         # Start by checking if anything was logged that fits our trigger level.
         $TriggerLogLevelNumber = Get-LogLevel -EntryType $TriggerLogLevel
-        if ((!$PSBoundParameters.ContainsKey("TriggerLogLevel") -and !$PSBoundParameters.ContainsKey("LogLevel")) -or $Script:LogEntries | Where-Object -FilterScript { $_.LogLevel -le $TriggerLogLevelNumber }) {
+        if ((!$PSBoundParameters.ContainsKey("TriggerLogLevel") -and !$PSBoundParameters.ContainsKey("LogLevel")) -or ($Script:LogEntries | Where-Object -FilterScript { $_.LogLevel -le $TriggerLogLevelNumber })) {
             if (!$Subject) {
                 $Subject = $Script:r.EmailLogSubject
             }
