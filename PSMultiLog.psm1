@@ -380,7 +380,7 @@ Function Send-EmailLog {
     )
 
     Begin {
-        if ($LogLevel) {
+        if ($PSBoundParameters.ContainsKey("LogLevel")) {
             # Deprecated functionality.
             Write-Warning -Message ([string]::Format($Script:r.Parameter_F0_Deprecated_F1, "LogLevel", "TriggerLogLevel and SendLogLevel"))
             $TriggerLogLevel = $LogLevel
@@ -406,9 +406,11 @@ Function Send-EmailLog {
                 $EmailBody += "<div class=`"log-entries`">"
 
                 $EmailBody += $Entries | ConvertTo-HtmlUnorderedList -FormatScript {
-                    $Line = "[$($_.Timestamp.ToString("u"))] - "
+                    Param ($Entry)
 
-                    switch ($_.EntryType) {
+                    $Line = "[$($Entry.Timestamp.ToString("u"))] - "
+
+                    switch ($Entry.EntryType) {
                         "Information" {
                             $Line += "<span style=`"color: Teal`">$($Script:r.Info)</span>"
                         }
@@ -422,20 +424,20 @@ Function Send-EmailLog {
                         }
                     }
 
-                    $Line += ": $($_.Message)"
+                    $Line += ": $($Entry.Message)"
 
-                    if ($_.Exception) {
-                        $Line += "<ul><li>$($Script:r.Message): $($_.Exception.Message)</li><li>$($Script:r.Source): $($_.Exception.Source)</li><li>$($Script:r.StackTrace):"
+                    if ($Entry.Exception) {
+                        $Line += "<ul><li>$($Script:r.Message): $($Entry.Exception.Message)</li><li>$($Script:r.Source): $($Entry.Exception.Source)</li><li>$($Script:r.StackTrace):"
 
-                        if ($_.Exception.StackTrace -and $_.Exception.StackTrace.Count -gt 0) {
+                        if ($Entry.Exception.StackTrace -and $Entry.Exception.StackTrace.Count -gt 0) {
                             $Line += "<ul>"
-                            foreach ($Stack in $_.Exception.StackTrace) {
+                            foreach ($Stack in $Entry.Exception.StackTrace) {
                                 $Line += "<li>$Stack</li>"
                             }
                             $Line += "</ul>"
                         }
 
-                        $Line += "</li><li>$($Script:r.TargetSite): $($_.Exception.TargetSite)</li></ul>"
+                        $Line += "</li><li>$($Script:r.TargetSite): $($Entry.Exception.TargetSite)</li></ul>"
                     }
 
                     $Line
@@ -1160,7 +1162,7 @@ Function ConvertTo-HtmlUnorderedList {
             $OutputText += "<li>"
 
             if ($FormatScript) {
-                $OutputText += Invoke-Command -ScriptBlock $FormatScript
+                $OutputText += Invoke-Command -ScriptBlock $FormatScript -ArgumentList $_
             } else {
                 $OutputText += $_
             }
