@@ -527,9 +527,9 @@ Function Start-EventLogLog {
 
         # Check if the source exists.
         try {
-            if ([System.Diagnostics.EventLog]::SourceExists($Source)) {
+            if (Test-EventLogSource -Source $Source) {
                 # It does exist, make sure it points at the right log.
-                if ([System.Diagnostics.EventLog]::LogNameFromSourceName($Source, ".") -ne $LogName) {
+                if ((Get-LogName -Source $Source) -ne $LogName) {
                     # Source exists but points to a different log. Not good!
                     Write-Error -Message $Script:r.EventLogLogSourceInWrongLog
                     return
@@ -1229,6 +1229,32 @@ Function ConvertTo-HtmlUnorderedList {
     End {
         $OutputText += "</ul>`n"
         $OutputText
+    }
+}
+
+Function Test-EventLogSource {
+    [CmdletBinding()]
+    [OutputType([bool])]
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string]$Source
+    )
+
+    Process {
+        return [System.Diagnostics.EventLog]::SourceExists($Source)
+    }
+}
+
+Function Get-LogName {
+    [CmdletBinding()]
+    [OutputType([string])]
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string]$Source
+    )
+
+    Process {
+        return [System.Diagnostics.EventLog]::LogNameFromSourceName($Source, ".")
     }
 }
 

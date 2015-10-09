@@ -18,7 +18,7 @@
 RootModule = 'PSMultiLog.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.4'
+ModuleVersion = '1.0.5'
 
 # ID used to uniquely identify this module
 GUID = '6792caca-e1b3-4a6b-b1bc-979f9935e95f'
