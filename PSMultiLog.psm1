@@ -213,7 +213,7 @@ Function Start-EmailLog {
     [CmdletBinding()]
     Param (
         [Parameter()]
-        [switch]$ClearEntryCache
+        [switch]$ClearEntryCache = $false
     )
 
     Process {
@@ -259,7 +259,7 @@ Function Stop-EmailLog {
     [CmdletBinding(SupportsShouldProcess = $true)]
     Param (
         [Parameter()]
-        [switch]$RetainEntryCache
+        [switch]$RetainEntryCache = $false
     )
 
     Process {
@@ -867,11 +867,11 @@ Function Get-LogLevel {
 Function Format-LogMessage {
     <#
     .SYNOPSIS
-    Returns a Formats a log entry for output and returns the formatted string.
+    Formats a log entry for output and returns the formatted string.
 
     .DESCRIPTION
-    Returns a Formats a log entry for output and returns the formatted string.
-    Used by the File and PassThru logging methods.
+    Formats a log entry for output and returns the formatted string. Used by the
+    File and PassThru logging methods.
 
     .PARAMETER Entry
     Specifies the log entry to format.
@@ -881,8 +881,8 @@ Function Format-LogMessage {
     string.
 
     .PARAMETER Exception
-    Specifies an exception object to include information about in the formatted
-    string.
+    Specifies whether or not to include information about any exceptions
+    included in the entry in the formatted string.
 
     .OUTPUTS
     String.
@@ -929,6 +929,62 @@ Function Format-LogMessage {
         }
 
         return $ReturnString
+    }
+}
+
+Function ConvertTo-HtmlUnorderedList {
+    <#
+    .SYNOPSIS
+    Builds an HTML UnorderedList from the supplied input and returns its string.
+
+    .DESCRIPTION
+    Builds an HTML UnorderedList from the supplied input and returns its string.
+
+    .PARAMETER FormatScript
+    Specifies a script block to invoke for each object passed into the Cmdlet.
+
+    .PARAMETER InputObject
+    Specifies one or more objects to write to the unordered list.
+
+    .OUTPUTS
+    String.
+    #>
+    [CmdletBinding()]
+    [OutputType([string])]
+    Param (
+        [Parameter()]
+
+        [scriptblock]$FormatScript = $null,
+
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
+        $InputObject
+    )
+
+    Begin {
+        $OutputText = "<ul>`n"
+    }
+
+    Process {
+        @($InputObject) | ForEach-Object -Process {
+            $OutputText += "<li>"
+
+            if ($FormatScript) {
+                $OutputText += Invoke-Command -ScriptBlock $FormatScript
+            } else {
+                $OutputText += $_
+            }
+
+            $OutputText += "</li>`n"
+        }
+    }
+
+    End {
+        $OutputText += "</ul>`n"
+        $OutputText
     }
 }
 
@@ -1119,7 +1175,6 @@ Function Write-PassThruLog {
         }
     }
 }
-
 
 Function ConvertTo-HtmlUnorderedList {
     <#
