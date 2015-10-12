@@ -89,10 +89,12 @@ The following Events will be created:
 
 ![Event Log - Error with Exception](https://cloud.githubusercontent.com/assets/946913/10434410/5542f72c-70e7-11e5-8473-79cc6048d7f4.PNG)
 
+The Source, Stack Trace, and Target Site properties would be populated on a real exception.
+
 ### E-mail Log
 
 An e-mail will be generated which looks like this:
 
 ![E-mail Log](https://cloud.githubusercontent.com/assets/946913/10434409/5542458e-70e7-11e5-97a7-bdf6d114d179.PNG)
 
-
+The Source, Stack Trace, and Target Site properties would be populated on a real exception.
