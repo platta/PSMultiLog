@@ -36,3 +36,10 @@ Write-Log -EntryType Error -Message "This will get logged both to file and to th
 Stop-FileLog
 Stop-EventLogLog
 ```
+
+The file `c:\ps\info.log` from the above example would look something like this:
+```
+[2015-10-12 13:02:30Z] - INFO - This will only get logged to file.
+[2015-10-12 13:02:42Z] - WARN - This will only get logged to file.
+[2015-10-12 13:02:51Z] - ERRR - This will get logged both to file and to the Event Log.
+```
