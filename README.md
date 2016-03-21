@@ -9,9 +9,10 @@ The PSMultiLog module supports the following log targets:
 - PassThru (will write to the verbose, warning, and error streams)
 - Event Log
 - Email (log events are collected, and then the `Send-EmailLog` Cmdlet is used to send the actual e-mail)
+- Slack webhook integration
 
 ## Compatibility
-The PSMultiLog module is compatible with PowerShell v2.0 and up.
+As of version 2.0.0, The PSMultiLog module is compatible with PowerShell __v3.0__ and up. for compatability with __v2.0__, please use version 1.1.1 (checkin 94e4207).
 
 ## Installation
 Copy the module into a folder in your PowerShell Module Path. You can check `$env:PSModulePath` in a PowerShell session if unsure what paths are included, but starting in PowerShell v4.0 the standard is `C:\Program Files\WindowsPowerShell\Modules`. Don't put the code directly into the Modules folder, it must be in a subfolder named `PSMultiLog`.
@@ -98,3 +99,7 @@ An e-mail will be generated which looks like this:
 ![E-mail Log](https://cloud.githubusercontent.com/assets/946913/10434409/5542458e-70e7-11e5-97a7-bdf6d114d179.PNG)
 
 The Source, Stack Trace, and Target Site properties would be populated on a real exception.
+
+## About Slack Integration
+
+Integrating with Slack requires setting up an [Incoming Webhook](https://api.slack.com/incoming-webhooks), but don't worry about knowing the details of how to make the HTTP calls. All you really need is the URL they will provide once you enable the integration. For additional information about how to use Slack logging, see `Get-Help Start-SlackLog`.
