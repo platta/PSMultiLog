@@ -433,10 +433,18 @@ Describe Write-PassThruLog {
             EventId = 1000
         }
 
-        It "Writes to the Verbose stream" {
+        It "Writes to the Verbose or Information stream" {
             Mock Write-Verbose {}
+            Mock Write-Information {}
             Write-PassThruLog -Entry $InfoEntry
-            Assert-MockCalled -Scope It Write-Verbose -Exactly 1
+
+            if ($PSVersionTable -and $PSVersionTable.PSVersion.Major -ge 5) {
+                Assert-MockCalled -Scope It Write-Information -Exactly 1
+                Assert-MockCalled -Scope It Write-Verbose -Exactly 0
+            } else {
+                Assert-MockCalled -Scope It Write-Information -Exactly 0
+                Assert-MockCalled -Scope It Write-Verbose -Exactly 1
+            }
         }
 
         It "Writes to the Warning stream" {

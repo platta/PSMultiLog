@@ -12,7 +12,7 @@
 RootModule = 'PSMultiLog.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.1.0'
+ModuleVersion = '1.1.1'
 
 # ID used to uniquely identify this module
 GUID = '6792caca-e1b3-4a6b-b1bc-979f9935e95f'
@@ -66,8 +66,13 @@ FormatsToProcess = @()
 NestedModules = @()
 
 # Functions to export from this module
-FunctionsToExport = 
-               'Disable-EmailLog Disable-EventLogLog Disable-FileLog Disable-HostLog Disable-PassThruLog Enable-EmailLog Enable-EventLogLog Enable-FileLog Enable-HostLog Enable-PassThruLog Send-EmailLog Start-EmailLog Start-EventLogLog Start-FileLog Start-HostLog Start-PassThruLog Stop-EmailLog Stop-EventLogLog Stop-FileLog Stop-HostLog Stop-PassThruLog Write-Log'
+FunctionsToExport = 'Disable-EmailLog', 'Disable-EventLogLog', 'Disable-FileLog', 
+               'Disable-HostLog', 'Disable-PassThruLog', 'Enable-EmailLog', 
+               'Enable-EventLogLog', 'Enable-FileLog', 'Enable-HostLog', 
+               'Enable-PassThruLog', 'Send-EmailLog', 'Start-EmailLog', 
+               'Start-EventLogLog', 'Start-FileLog', 'Start-HostLog', 
+               'Start-PassThruLog', 'Stop-EmailLog', 'Stop-EventLogLog', 
+               'Stop-FileLog', 'Stop-HostLog', 'Stop-PassThruLog', 'Write-Log'
 
 # Cmdlets to export from this module
 CmdletsToExport = @()
