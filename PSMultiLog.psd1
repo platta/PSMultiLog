@@ -12,7 +12,7 @@
 RootModule = 'PSMultiLog.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.1.1'
+ModuleVersion = '2.0.0'
 
 # ID used to uniquely identify this module
 GUID = '6792caca-e1b3-4a6b-b1bc-979f9935e95f'
@@ -30,7 +30,7 @@ Copyright = '(c) 2015. All rights reserved.'
 Description = 'The PSMultiLog module is designed to simultaneously write log output to multiple log targets. Supported targets include logging to a file, to the Windows Event Log, and sending an e-mail. The module is used by turning on the desired log targets and then calling the Write-Log Cmdlet.'
 
 # Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = '2.0'
+PowerShellVersion = '3.0'
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ''
@@ -71,8 +71,9 @@ FunctionsToExport = 'Disable-EmailLog', 'Disable-EventLogLog', 'Disable-FileLog'
                'Enable-EventLogLog', 'Enable-FileLog', 'Enable-HostLog', 
                'Enable-PassThruLog', 'Send-EmailLog', 'Start-EmailLog', 
                'Start-EventLogLog', 'Start-FileLog', 'Start-HostLog', 
-               'Start-PassThruLog', 'Stop-EmailLog', 'Stop-EventLogLog', 
-               'Stop-FileLog', 'Stop-HostLog', 'Stop-PassThruLog', 'Write-Log'
+               'Start-PassThruLog', 'Start-SlackLog', 'Stop-EmailLog', 
+               'Stop-EventLogLog', 'Stop-FileLog', 'Stop-HostLog', 'Stop-PassThruLog', 
+               'Stop-SlackLog', 'Write-Log'
 
 # Cmdlets to export from this module
 CmdletsToExport = @()

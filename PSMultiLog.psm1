@@ -49,6 +49,19 @@ $Script:Settings = @{
         Enabled = $false
         LogLevel = 0
     }
+
+    Slack = New-Object -TypeName psobject -Property @{
+        Enabled = $false
+        LogLevel = 0
+        Uri = ""
+        Channel = ""
+        Username = ""
+        InformationIcon = ""
+        WarningIcon = ""
+        ErrorIcon = ""
+        IncludeTimestamp = $false
+        ChannelAlertLevel = -1
+    }
 }
 
 #-------------------------------------------------------------------------------
@@ -730,6 +743,154 @@ Function Stop-PassThruLog {
 
 
 #-------------------------------------------------------------------------------
+# Slack Channel Logging
+Function Start-SlackLog {
+    <#
+    .SYNOPSIS
+    Turns on Slack Channel logging.
+
+    .DESCRIPTION
+    Turns on Slack Channel logging using Slack custom webhook integrations.
+
+    .PARAMETER LogLevel
+    Specifies the minimum log entry severity to send to Slack. The default value
+    is "Error".
+
+    .PARAMETER Uri
+    Specifies the webhook URI to use when sending events to Slack.
+
+    .PARAMETER Channel
+    Specifies the name of a Slack channel to post messages to. Do not include
+    the hash (#) at the beginning of the channel name.
+
+    .PARAMETER Username
+    Specifies a custom username to display on messages sent from this process.
+
+    .PARAMETER InformationIcon
+    Specifies the name of an emoji icon to use for Information log messages. Do
+    not surround the emoji name in colons (:).
+
+    .PARAMETER WarningIcon
+    Specifies the name of an emoji icon to use for Warning log messages. Do not
+    surround the emoji name in colons (:).
+
+    .PARAMETER ErrorIcon
+    Specifies the name of an emoji icon to use for Error log messages. Do not
+    surround the emoji name in colons (:).
+
+    .PARAMETER IncludeTimestamp
+    When included, this switch specifies that a timestamp should be written to
+    the body of the message, instead of just relying on the time Slack received
+    the entry.
+
+    .PARAMETER ChannelAlertLevel
+    Specifies the minimum log entry severity to include the @channel tag in.
+    This tag will cause an alert to be sent to all members of the channel. The
+    default value is for this to be disabled.
+
+    .OUTPUTS
+    None.
+
+    .EXAMPLE
+    C:\PS> Start-SlackLog -Uri "https://hooks.slack.com/services/ABC123"
+
+    ----------
+
+    This command enables logging to Slack at the specified integration URL,
+    using the default channel and username that were set up with the integration
+    and the default icons for the different log entry levels.
+    #>
+    [CmdletBinding()]
+    Param (
+        [Parameter()]
+        [ValidateSet("Information", "Warning", "Error")]
+        [string]$LogLevel = "Error",
+
+        [Parameter(Mandatory = $true)]
+        [string]$Uri,
+
+        [Parameter()]
+        [string]$Channel,
+
+        [Parameter()]
+        [string]$Username,
+
+        [Parameter()]
+        [string]$InformationIcon = "speech_balloon",
+
+        [Parameter()]
+        [string]$WarningIcon = "warning",
+
+        [Parameter()]
+        [string]$ErrorIcon = "rotating_light",
+
+        [Parameter()]
+        [switch]$IncludeTimestamp,
+
+        [Parameter()]
+        [ValidateSet("Information", "Warning", "Error", "None")]
+        [string]$ChannelAlertLevel = "None"
+    )
+
+    Process {
+        $Script:Settings["Slack"].Enabled = $true
+        $Script:Settings["Slack"].LogLevel = Get-LogLevel -EntryType $LogLevel
+        $Script:Settings["Slack"].Uri = $Uri
+        $Script:Settings["Slack"].InformationIcon = $InformationIcon
+        $Script:Settings["Slack"].WarningIcon = $WarningIcon
+        $Script:Settings["Slack"].ErrorIcon = $ErrorIcon
+        $Script:Settings["Slack"].ChannelAlertLevel = Get-LogLevel -EntryType $ChannelAlertLevel
+
+        if ($Channel) {
+            $Script:Settings["Slack"].Channel = $Channel
+        } else {
+            $Script:Settings["Slack"].Channel = ""
+        }
+
+        if ($Username) {
+            $Script:Settings["Slack"].Username = $Username
+        } else {
+            $Script:Settings["Slack"].Username = ""
+        }
+
+        if ($IncludeTimestamp) {
+            $Script:Settings["Slack"].IncludeTimestamp = $true
+        } else {
+            $Script:Settings["Slack"].IncludeTimestamp = $false
+        }
+    }
+}
+
+Function Stop-SlackLog {
+    <#
+    .SYNOPSIS
+    Turns off Slack Channel logging.
+
+    .DESCRIPTION
+    Turns off Slack Channel logging.
+
+    .OUTPUTS
+    None.
+
+    .Example
+    C:\PS> Stop-SlackLog
+
+    ----------
+
+    This command turns off Slack Channel logging.
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    Param ()
+
+    Process {
+        if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
+            $Script:Settings["Slack"].Enabled = $false
+        }
+    }
+}
+
+
+#-------------------------------------------------------------------------------
 # Main logging method
 Function Write-Log {
     <#
@@ -823,6 +984,11 @@ Function Write-Log {
         if ($Script:Settings["PassThru"].Enabled -and $NewEntry.LogLevel -le $Script:Settings["PassThru"].LogLevel) {
             Write-PassThruLog -Entry $NewEntry
         }
+
+        # Slack channel logging.
+        if ($Script:Settings["Slack"].Enabled -and $NewEntry.LogLevel -le $Script:Settings["Slack"].LogLevel) {
+            Write-SlackLog -Entry $NewEntry
+        }
     }
 }
 
@@ -849,7 +1015,7 @@ Function Get-LogLevel {
     [OutputType([int])]
     Param (
         [Parameter(Mandatory = $true)]
-        [ValidateSet("Information", "Warning", "Error")]
+        [ValidateSet("Information", "Warning", "Error", "None")]
         [string]$EntryType
     )
 
@@ -865,6 +1031,10 @@ Function Get-LogLevel {
 
             "Error" {
                 return 0
+            }
+
+            "None" {
+                return -1
             }
         }
     }
@@ -1188,6 +1358,102 @@ Function Write-PassThruLog {
     }
 }
 
+Function Write-SlackLog {
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory = $true)]
+        [psobject]$Entry
+    )
+
+    Process {
+        $Message = ""
+
+        if ($Entry.LogLevel -le $Script:Settings["Slack"].ChannelAlertLevel) {
+            $Message += "<!channel>: "
+        }
+
+        if ($Script:Settings["Slack"].IncludeTimestamp) {
+            $Message += "[$($Entry.Timestamp.ToString("u"))] - " | ConvertTo-SlackEncoding
+        }
+
+        $Message += $Entry.Message | ConvertTo-SlackEncoding
+
+        if ($Entry.Exception) {
+            $Message += "`n`n$($Script:r.ExceptionInformation)" + `
+            "`n$($Script:r.Message): $($Entry.Exception.Message)" + `
+            "`n$($Script:r.Source): $($Entry.Exception.Source)" + `
+            "`n$($Script:r.StackTrace): $($Entry.Exception.StackTrace)" + `
+            "`n$($Script:r.TargetSite): $($Entry.Exception.TargetSite)" | ConvertTo-SlackEncoding
+        }
+
+        switch ($Entry.EntryType) {
+            "Information" {
+                $Icon = $Script:Settings["Slack"].InformationIcon | ConvertTo-SlackEncoding
+            }
+
+            "Warning" {
+                $Icon = $Script:Settings["Slack"].WarningIcon | ConvertTo-SlackEncoding
+            }
+
+            "Error" {
+                $Icon = $Script:Settings["Slack"].ErrorIcon | ConvertTo-SlackEncoding
+            }
+        }
+
+        $Elements = @()
+        $Elements += '"text":"' + $Message + '"'
+        $Elements += '"icon_emoji":":' + $Icon + ':"'
+
+        if ($Script:Settings["Slack"].Channel) {
+            $Elements += '"channel":"#' + ($Script:Settings["Slack"].Channel | ConvertTo-SlackEncoding) + '"'
+        }
+
+        if ($Script:Settings["Slack"].Username) {
+            $Elements += '"username":"' + ($Script:Settings["Slack"].Username | ConvertTo-SlackEncoding) + '"'
+        }
+
+        $Body = "payload={$([string]::Join(',', $Elements))}"
+
+        try {
+            Invoke-WebRequest -Uri $Script:Settings["Slack"].Uri -Method Post -Body $Body -ErrorAction Stop | Out-Null
+        } catch {
+            Write-Error -Exception $_.Exception -Message "Exception while posting log to Slack. Message is '$($_.Exception.Message)'."
+        }
+    }
+}
+
+
+Function ConvertTo-SlackEncoding {
+    <#
+    .SYNOPSIS
+    Encodes special characters for inclusion into a slack webhook request.
+
+    .DESCRIPTION
+    Encodes special characters for inclusion into a slack webhook request.
+
+    .PARAMETER InputString
+    Specifies the string to encode.
+
+    .OUTPUTS
+    String. The encoded value.
+    #>
+    [CmdletBinding()]
+    Param(
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipeline = $true
+        )]
+        [string]$InputString
+    )
+
+    Process {
+        return $InputString.Replace('"', '\"').Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')
+    }
+}
+
+
+
+
 Function ConvertTo-HtmlUnorderedList {
     <#
     .SYNOPSIS
@@ -1407,5 +1673,3 @@ Function Disable-PassThruLog {
         Stop-PassThruLog
     }
 }
-
-Export-ModuleMember -Function Enable-*, Disable-*, Start-*, Stop-*, Write-Log, Send-EmailLog

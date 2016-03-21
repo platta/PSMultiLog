@@ -468,6 +468,48 @@ Describe Write-PassThruLog {
 }
 
 #-------------------------------------------------------------------------------
+# Slack Logging
+#-------------------------------------------------------------------------------
+Describe Start-SlackLog {
+    It "Enables Slack Logging" {
+        InModuleScope PSMultiLog {
+            Stop-SlackLog
+            $Script:Settings["Slack"].Enabled | Should Be $false
+
+            Start-SlackLog -Uri "https://FakeUrl"
+            $Script:Settings["Slack"].Enabled | Should Be $true
+        }
+    }
+}
+
+Describe Stop-SlackLog {
+    It "Disables Slack Logging" {
+        InModuleScope PSMultiLog {
+            Start-SlackLog -Uri "https://FakeUrl"
+            $Script:Settings["Slack"].Enabled | Should Be $true
+
+            Stop-SlackLog
+            $Script:Settings["Slack"].Enabled | Should Be $false
+        }
+    }
+}
+
+Describe Write-SlackLog {
+    It "Calls the Slack webhook" {
+        InModuleScope PSMultiLog {
+            Mock Invoke-WebRequest {}
+
+            Start-SlackLog -Uri "https://FakeUrl"
+
+            Write-Log -EntryType Error -Message "Test Error"
+            Assert-MockCalled -Scope It Invoke-WebRequest -Exactly 1
+
+            Stop-SlackLog
+        }
+    }
+}
+
+#-------------------------------------------------------------------------------
 # Write-Log, the main event
 #-------------------------------------------------------------------------------
 Describe Write-Log {
@@ -509,6 +551,7 @@ Describe Get-LogLevel {
             Get-LogLevel -EntryType "Information" | Should Be 2
             Get-LogLevel -EntryType "Warning" | Should Be 1
             Get-LogLevel -EntryType "Error" | Should Be 0
+            Get-LogLevel -EntryType "None" | Should Be -1
         }
 
         It "Throws on invalid EntryType" {
