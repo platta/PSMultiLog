@@ -380,6 +380,9 @@ Function Send-EmailLog {
     )
 
     Begin {
+
+        $Bypass = $false
+
         if ($PSBoundParameters.ContainsKey("LogLevel")) {
             # Deprecated functionality.
             Write-Warning -Message ([string]::Format($Script:r.Parameter_F0_Deprecated_F1, "LogLevel", "TriggerLogLevel and SendLogLevel"))
@@ -452,18 +455,18 @@ Function Send-EmailLog {
             $EmailBody += "</body>"
         } else {
             # No events occurred that would trigger us to send an e-mail.
-            break
+            $Bypass = $true
         }
     }
 
     Process {
-        if (!$Empty -or $SendOnEmpty) {
+        if (!$Bypass -and (!$Empty -or $SendOnEmpty)) {
             Send-MailMessage -From $From -To $To -Subject $Subject -Body $EmailBody -SmtpServer $SmtpServer -BodyAsHtml
         }
     }
 
     End {
-        if (!$RetainEntryCache) {
+        if (!$Bypass -and !$RetainEntryCache) {
             $Script:LogEntries = @()
         }
     }
