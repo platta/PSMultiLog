@@ -10,6 +10,9 @@ C:\PS> Start-FileLog -FilePath c:\ps\info.log
 C:\PS> Write-Log -EntryType Information -Message "Test Log Entry"
 #>
 
+# Determine if the Write-Information Cmdlet is available.
+$Script:WriteInformation = $PSVersionTable -ne $null -and $PSVersionTable.PSVersion.Major -ge 5
+
 # Load strings file
 $CurrentPath = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 Import-LocalizedData -BindingVariable r -FileName Strings.psd1 -BaseDirectory (Join-Path -Path $CurrentPath -ChildPath "Localized")
@@ -1161,7 +1164,13 @@ Function Write-PassThruLog {
     Process {
         switch ($Entry.EntryType) {
             "Information" {
-                Write-Verbose -Message (Format-LogMessage -Entry $Entry)
+                # Use the Write-Information Cmdlet introduced in PowerShell
+                # version 5 if available. Otherwise Write-Verbose
+                if ($Script:WriteInformation) {
+                    Write-Information -MessageData (Format-LogMessage -Entry $Entry)
+                } else {
+                    Write-Verbose -Message (Format-LogMessage -Entry $Entry)
+                }
             }
 
             "Warning" {
