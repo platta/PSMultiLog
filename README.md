@@ -12,7 +12,7 @@ The PSMultiLog module supports the following log targets:
 - Slack webhook integration
 
 ## Compatibility
-As of version 2.0.0, The PSMultiLog module is compatible with PowerShell __v3.0__ and up. for compatability with __v2.0__, please use version 1.1.1 (checkin 94e4207).
+As of version 2.0.0, The PSMultiLog module is compatible with PowerShell __v3.0__ and up. for compatability with __v2.0__, please use version 1.1.1 (commit 94e4207).
 
 ## Installation
 Copy the module into a folder in your PowerShell Module Path. You can check `$env:PSModulePath` in a PowerShell session if unsure what paths are included, but starting in PowerShell v4.0 the standard is `C:\Program Files\WindowsPowerShell\Modules`. Don't put the code directly into the Modules folder, it must be in a subfolder named `PSMultiLog`.
