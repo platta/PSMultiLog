@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/eenv9fp141byaube?svg=true)](https://ci.appveyor.com/project/AdamPlatt/psmultilog)
+
 # PSMultiLog
 PSMultiLog is a multi-target logging module to simplify and centralize logging in your code. At the beginning of your code, turn on the log targets you want to use, and from the on just call the `Write-Log` Cmdlet to simultaneously write to all active targets.
 
