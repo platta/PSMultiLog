@@ -434,14 +434,14 @@ Describe Write-PassThruLog {
         }
 
         It "Writes to the Verbose or Information stream" {
-            Mock Write-Verbose {}
-            Mock Write-Information {}
             Write-PassThruLog -Entry $InfoEntry
 
             if ($PSVersionTable -and $PSVersionTable.PSVersion.Major -ge 5) {
+                Mock Write-Information {}
                 Assert-MockCalled -Scope It Write-Information -Exactly 1
                 Assert-MockCalled -Scope It Write-Verbose -Exactly 0
             } else {
+                Mock Write-Verbose {}
                 Assert-MockCalled -Scope It Write-Information -Exactly 0
                 Assert-MockCalled -Scope It Write-Verbose -Exactly 1
             }
