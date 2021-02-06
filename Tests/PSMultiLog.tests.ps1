@@ -1,5 +1,5 @@
 ﻿$ParentPath = Split-Path -Path (Split-Path -Path $MyInvocation.MyCommand.Definition -Parent) -Parent
-Import-Module -Name (Join-Path -Path $ParentPath -ChildPath "PSMultiLog.psm1")
+Import-Module -Name (Join-Path -Path $ParentPath -ChildPath "PSMultiLogPlus.psm1")
 
 
 #-------------------------------------------------------------------------------
@@ -7,7 +7,7 @@ Import-Module -Name (Join-Path -Path $ParentPath -ChildPath "PSMultiLog.psm1")
 #-------------------------------------------------------------------------------
 Describe Start-FileLog {
     It "Enables File Logging" {
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             Mock Test-Path { return $false }
             Mock New-Item {}
             Stop-FileLog
@@ -21,7 +21,7 @@ Describe Start-FileLog {
     }
 
     It "Creates log file" {
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             Mock Test-Path { return $false }
             Mock New-Item {}
 
@@ -33,7 +33,7 @@ Describe Start-FileLog {
     }
 
     It "Removes existing file" {
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             Mock Test-Path { return $true }
             Mock Remove-Item {}
             Mock New-Item {}
@@ -48,7 +48,7 @@ Describe Start-FileLog {
 
 Describe Stop-FileLog {
     It "Disables File Logging" {
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             Mock Test-Path { return $false }
             Mock New-Item {}
             Start-FileLog -FilePath "C:\NotARealFile.log"
@@ -62,7 +62,7 @@ Describe Stop-FileLog {
 
 Describe Write-FileLog {
     It "Writes to a file" {
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             $Timestamp = Get-Date
             $TimestampString = $Timestamp.ToString("u")
             $InfoEntry = New-Object -TypeName psobject -Property @{
@@ -86,7 +86,7 @@ Describe Write-FileLog {
 # E-mail Logging
 #-------------------------------------------------------------------------------
 Describe Start-EmailLog {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         It "Enables E-mail Logging" {
             $Script:Settings["Email"].Enabled | Should Be $false
             Start-EmailLog
@@ -108,7 +108,7 @@ Describe Start-EmailLog {
 }
 
 Describe Stop-EmailLog {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         It "Disables Email Logging" {
             Start-EmailLog
             $Script:Settings["Email"].Enabled | Should Be $true
@@ -146,26 +146,26 @@ Describe Send-EmailLog {
     $From = "Fake"
     $Subject = "Fake"
 
-    Mock -ModuleName PSMultiLog Send-MailMessage {}
+    Mock -ModuleName PSMultiLogPlus Send-MailMessage {}
 
     It "Sends e-mail" {
         Start-EmailLog
         Write-Log -EntryType Error -Message "Test message"    
 
         Send-EmailLog -SmtpServer $SmtpServer -To $To -From $From -Subject $Subject
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Send-MailMessage -Exactly 1
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Send-MailMessage -Exactly 1
 
         Stop-EmailLog
     }
 
     It "Sends on empty" {
         Send-EmailLog -SmtpServer $SmtpServer -To $To -From $From -Subject $Subject -SendOnEmpty
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Send-MailMessage -Exactly 1
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Send-MailMessage -Exactly 1
     }
 
     It "Does not send on empty" {
         Send-EmailLog -SmtpServer $SmtpServer -To $To -From $From -Subject $Subject
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Send-MailMessage -Exactly 0
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Send-MailMessage -Exactly 0
     }
 
     It "Triggers based on log level" {
@@ -173,11 +173,11 @@ Describe Send-EmailLog {
         Write-Log -EntryType Warning -Message "Test message"
 
         Send-EmailLog -SmtpServer $SmtpServer -To $To -From $From -Subject $Subject
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Send-MailMessage 0
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Send-MailMessage 0
 
         Write-Log -EntryType Warning -Message "Test message"
         Send-EmailLog -SmtpServer $SmtpServer -To $To -From $From -Subject $Subject -TriggerLogLevel Warning -SendLogLevel Information
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Send-MailMessage -Exactly 1
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Send-MailMessage -Exactly 1
 
         Stop-EmailLog
     }
@@ -188,7 +188,7 @@ Describe Send-EmailLog {
         Write-Log -EntryType Warning -Message "Test message"
         Send-EmailLog -SmtpServer $SmtpServer -To $To -From $From -Subject $Subject -RetainEntryCache
 
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             $Script:LogEntries.Count | Should Be 1
         }
 
@@ -201,7 +201,7 @@ Describe Send-EmailLog {
         Write-Log -EntryType Warning -Message "Test message"
         Send-EmailLog -SmtpServer $SmtpServer -To $To -From $From -Subject $Subject
 
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             $Script:LogEntries.Count | Should Be 0
         }
 
@@ -210,7 +210,7 @@ Describe Send-EmailLog {
 }
 
 Describe Write-EmailLog {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         It "Writes to the entry cache" {
             Start-EmailLog -ClearEntryCache
             $Script:LogEntries.Count | Should Be 0
@@ -227,12 +227,12 @@ Describe Write-EmailLog {
 # Event Log Logging
 #-------------------------------------------------------------------------------
 Describe Start-EventLogLog {
-    Mock -ModuleName PSMultiLog New-EventLog {}
-    Mock -ModuleName PSMultiLog Test-EventLogSource { return $true }
-    Mock -ModuleName PSMultiLog Get-LogName { return "Application" }
+    Mock -ModuleName PSMultiLogPlus New-EventLog {}
+    Mock -ModuleName PSMultiLogPlus Test-EventLogSource { return $true }
+    Mock -ModuleName PSMultiLogPlus Get-LogName { return "Application" }
 
     It "Enables Event Log Logging" {
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             $Script:Settings["EventLog"].Enabled | Should Be $false
 
             Start-EventLogLog -Source "Fake"
@@ -244,25 +244,25 @@ Describe Start-EventLogLog {
 
     
     It "Writes an error if source is in wrong log" {
-        Mock -ModuleName PSMultiLog Write-Error {}
+        Mock -ModuleName PSMultiLogPlus Write-Error {}
         Start-EventLogLog -Source "Fake" -LogName "Fake"
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Write-Error -Exactly 1
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Write-Error -Exactly 1
     }
 
     It "Creates a new log if necessary" {
-        Mock -ModuleName PSMultiLog Test-EventLogSource { return $false }
+        Mock -ModuleName PSMultiLogPlus Test-EventLogSource { return $false }
         Start-EventLogLog -Source "Fake"
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It New-EventLog -Exactly 1
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It New-EventLog -Exactly 1
     }
 }
 
 Describe Stop-EventLogLog {
-    Mock -ModuleName PSMultiLog New-EventLog {}
-    Mock -ModuleName PSMultiLog Test-EventLogSource { return $true }
-    Mock -ModuleName PSMultiLog Get-LogName { return "Application" }
+    Mock -ModuleName PSMultiLogPlus New-EventLog {}
+    Mock -ModuleName PSMultiLogPlus Test-EventLogSource { return $true }
+    Mock -ModuleName PSMultiLogPlus Get-LogName { return "Application" }
 
     It "Disables Event Log Logging" {
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             Start-EventLogLog -Source "Fake"
             $Script:Settings["EventLog"].Enabled | Should Be $true
 
@@ -274,7 +274,7 @@ Describe Stop-EventLogLog {
 
 Describe Write-EventLogLog {
     It "Writes to the Event Log" {
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             Mock Write-EventLog
 
             $Timestamp = Get-Date
@@ -298,7 +298,7 @@ Describe Write-EventLogLog {
 # Host Logging
 #-------------------------------------------------------------------------------
 Describe Start-HostLog {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         It "Enables Host Logging" {
             $Script:Settings["Host"].Enabled | Should Be $false
             Start-HostLog
@@ -326,7 +326,7 @@ Describe Start-HostLog {
 }
 
 Describe Stop-HostLog {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         It "Disables Host Logging" {
             Start-HostLog
             $Script:Settings["Host"].Enabled | Should Be $true
@@ -338,7 +338,7 @@ Describe Stop-HostLog {
 }
 
 Describe Write-HostLog {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         $Timestamp = Get-Date
         $TimestampString = $Timestamp.ToString("u")
         $Entry = New-Object -TypeName psobject -Property @{
@@ -362,7 +362,7 @@ Describe Write-HostLog {
 # PassThru Logging
 #-------------------------------------------------------------------------------
 Describe Start-PassThruLog {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         It "Enables PassThru Logging" {
             $Script:Settings["PassThru"].Enabled | Should Be $false
             Start-PassThruLog
@@ -386,7 +386,7 @@ Describe Start-PassThruLog {
 }
 
 Describe Stop-PassThruLog {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         It "Disables PassThru Logging" {
             Start-PassThruLog
             $Script:Settings["PassThru"].Enabled | Should Be $true
@@ -398,7 +398,7 @@ Describe Stop-PassThruLog {
 }
 
 Describe Write-PassThruLog {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         $Timestamp = Get-Date
         $TimestampString = $Timestamp.ToString("u")
         $InfoEntry = New-Object -TypeName psobject -Property @{
@@ -478,7 +478,7 @@ Describe Write-PassThruLog {
 #-------------------------------------------------------------------------------
 Describe Start-SlackLog {
     It "Enables Slack Logging" {
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             Stop-SlackLog
             $Script:Settings["Slack"].Enabled | Should Be $false
 
@@ -490,7 +490,7 @@ Describe Start-SlackLog {
 
 Describe Stop-SlackLog {
     It "Disables Slack Logging" {
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             Start-SlackLog -Uri "https://FakeUrl"
             $Script:Settings["Slack"].Enabled | Should Be $true
 
@@ -502,7 +502,7 @@ Describe Stop-SlackLog {
 
 Describe Write-SlackLog {
     It "Calls the Slack webhook" {
-        InModuleScope PSMultiLog {
+        InModuleScope PSMultiLogPlus {
             Mock Invoke-WebRequest {}
 
             Start-SlackLog -Uri "https://FakeUrl"
@@ -519,32 +519,32 @@ Describe Write-SlackLog {
 # Write-Log, the main event
 #-------------------------------------------------------------------------------
 Describe Write-Log {
-    Mock -ModuleName PSMultiLog Write-FileLog {}
-    Mock -ModuleName PSMultiLog Write-EventLogLog {}
-    Mock -ModuleName PSMultiLog Write-EmailLog {}
-    Mock -ModuleName PSMultiLog Write-HostLog {}
-    Mock -ModuleName PSMultiLog Write-PassThruLog {}
+    Mock -ModuleName PSMultiLogPlus Write-FileLog {}
+    Mock -ModuleName PSMultiLogPlus Write-EventLogLog {}
+    Mock -ModuleName PSMultiLogPlus Write-EmailLog {}
+    Mock -ModuleName PSMultiLogPlus Write-HostLog {}
+    Mock -ModuleName PSMultiLogPlus Write-PassThruLog {}
 
     It "Calls Write- Cmdlet for enable logging methods" {
         Write-Log -EntryType Information -Message "Test message"
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Write-FileLog 0
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Write-EventLogLog 0
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Write-EmailLog 0
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Write-HostLog 0
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Write-PassThruLog 0
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Write-FileLog 0
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Write-EventLogLog 0
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Write-EmailLog 0
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Write-HostLog 0
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Write-PassThruLog 0
 
-        Mock -ModuleNae PSMultiLog Write-Verbose {}
-        Mock -ModuleName PSMultiLog Write-Host {}
+        Mock -ModuleNae PSMultiLogPlus Write-Verbose {}
+        Mock -ModuleName PSMultiLogPlus Write-Host {}
         Start-EmailLog
         Start-HostLog -LogLevel Information
         Start-PassThruLog -LogLevel Information
 
         Write-Log -EntryType Information -Message "Test message"
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Write-FileLog 0
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Write-EventLogLog 0
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Write-EmailLog -Exactly 1
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Write-HostLog -Exactly 1
-        Assert-MockCalled -ModuleName PSMultiLog -Scope It Write-PassThruLog -Exactly 1
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Write-FileLog 0
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Write-EventLogLog 0
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Write-EmailLog -Exactly 1
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Write-HostLog -Exactly 1
+        Assert-MockCalled -ModuleName PSMultiLogPlus -Scope It Write-PassThruLog -Exactly 1
     }
 }
 
@@ -552,7 +552,7 @@ Describe Write-Log {
 # Internal Functions
 #-------------------------------------------------------------------------------
 Describe Get-LogLevel {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         It "Returns expected values" {
             Get-LogLevel -EntryType "Information" | Should Be 2
             Get-LogLevel -EntryType "Warning" | Should Be 1
@@ -567,7 +567,7 @@ Describe Get-LogLevel {
 }
 
 Describe Format-LogMessage {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         $Timestamp = Get-Date
         $TimestampString = $Timestamp.ToString("u")
         $InfoEntry = New-Object -TypeName psobject -Property @{
@@ -608,7 +608,7 @@ Describe Format-LogMessage {
 }
 
 Describe ConvertTo-HtmlUnorderedList {
-    InModuleScope PSMultiLog {
+    InModuleScope PSMultiLogPlus {
         $Objects = @("One", "Two", "Three")
 
         It "Performs basic formatting" {
@@ -621,4 +621,4 @@ Describe ConvertTo-HtmlUnorderedList {
     }
 }
 
-Remove-Module PSMultiLog
+Remove-Module PSMultiLogPlus
