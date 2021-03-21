@@ -1296,16 +1296,20 @@ Function Write-HostLog {
         [psobject]$Entry
     )
 
-    Process {
-    $SGRESC="$([char]27)"
-    $CLEAR="$SGRESC[0m"
+    Begin {
+        $SGRESC ="$([char]27)"
+        $CLEAR  ="$SGRESC[0m"
+        $CYAN   ="$SGRESC[96m"
+        $YELLOW ="$SGRESC[33m"
+        $RED    ="$SGRESC[31m"
+    }
 
+    Process {
         Write-Host -Object "[$($Entry.Timestamp.ToString("u"))] - " -NoNewline
 
         switch ($Entry.EntryType) {
             "Information" {
                 if ($Script:Settings["Host"].AnsiEscColor) {
-                    $CYAN="$SGRESC[96m"
                     Write-Host -Object ($CYAN + $Script:r.Info + $CLEAR) -NoNewline
                 } else {
                     Write-Host -Object $Script:r.Info -ForegroundColor Cyan -NoNewline
@@ -1314,7 +1318,6 @@ Function Write-HostLog {
 
             "Warning" {
                 if ($Script:Settings["Host"].AnsiEscColor) {
-                    $YELLOW="$SGRESC[33m"
                     Write-Host -Object ($YELLOW + $Script:r.Warn + $CLEAR) -NoNewline
                 } else {
                     Write-Host -Object $Script:r.Warn -ForegroundColor Yellow -NoNewline
@@ -1323,7 +1326,6 @@ Function Write-HostLog {
 
             "Error" {
                 if ($Script:Settings["Host"].AnsiEscColor) {
-                    $RED="$SGRESC[31m"
                     Write-Host -Object ($RED + $Script:r.Errr + $CLEAR) -NoNewline
                 } else {
                     Write-Host -Object $Script:r.Errr -ForegroundColor Red -NoNewline
