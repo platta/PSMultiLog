@@ -308,6 +308,7 @@ Describe Start-HostLog {
         It "Sets the log level" {
             Start-HostLog
             $Script:Settings["Host"].LogLevel | Should Be 0
+            $Script:Settings["Host"].AnsiEscColor | Should Be $false
 
             Start-HostLog -LogLevel "Error"
             $Script:Settings["Host"].LogLevel | Should Be 0
@@ -317,6 +318,9 @@ Describe Start-HostLog {
 
             Start-HostLog -LogLevel "Information"
             $Script:Settings["Host"].LogLevel | Should Be 2
+            
+            Start-HostLog -AnsiEscColor
+            $Script:Settings["Host"].AnsiEscColor | Should Be $true          
         }
     }
 }

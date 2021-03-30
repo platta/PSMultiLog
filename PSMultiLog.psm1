@@ -43,6 +43,7 @@ $Script:Settings = @{
     Host = New-Object -TypeName psobject -Property @{
         Enabled = $false
         LogLevel = 0
+        AnsiEscColor = $false
     }
 
     PassThru = New-Object -TypeName psobject -Property @{
@@ -620,6 +621,9 @@ Function Start-HostLog {
     Specifies the minimum log entry severity to write to the host. The default
     value is "Error".
 
+    .PARAMETER AnsiEscColor
+    Enables ANSI escape color.
+
     .OUTPUTS
     None.
 
@@ -634,12 +638,17 @@ Function Start-HostLog {
     Param (
         [Parameter()]
         [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel = "Error"
+        [string]$LogLevel = "Error",
+
+        [Parameter()]
+        [ValidateSet($true, $false)]
+        [switch]$AnsiEscColor = $false
     )
 
     Process {
         $Script:Settings["Host"].Enabled = $true
         $Script:Settings["Host"].LogLevel = Get-LogLevel -EntryType $LogLevel
+        $Script:Settings["Host"].AnsiEscColor = $AnsiEscColor
     }
 }
 
@@ -1287,25 +1296,45 @@ Function Write-HostLog {
         [psobject]$Entry
     )
 
+    Begin {
+        $SGRESC ="$([char]27)"
+        $CLEAR  ="$SGRESC[0m"
+        $CYAN   ="$SGRESC[96m"
+        $YELLOW ="$SGRESC[33m"
+        $RED    ="$SGRESC[31m"
+    }
+
     Process {
         Write-Host -Object "[$($Entry.Timestamp.ToString("u"))] - " -NoNewline
 
         switch ($Entry.EntryType) {
             "Information" {
-                Write-Host -Object $Script:r.Info -ForegroundColor Cyan -NoNewline
+                if ($Script:Settings["Host"].AnsiEscColor) {
+                    Write-Host -Object ($CYAN + $Script:r.Info + $CLEAR) -NoNewline
+                } else {
+                    Write-Host -Object $Script:r.Info -ForegroundColor Cyan -NoNewline
+                }
             }
 
             "Warning" {
-                Write-Host -Object $Script:r.Warn -ForegroundColor Yellow -NoNewline
+                if ($Script:Settings["Host"].AnsiEscColor) {
+                    Write-Host -Object ($YELLOW + $Script:r.Warn + $CLEAR) -NoNewline
+                } else {
+                    Write-Host -Object $Script:r.Warn -ForegroundColor Yellow -NoNewline
+                }
             }
 
             "Error" {
-                Write-Host -Object $Script:r.Errr -ForegroundColor Red -NoNewline
+                if ($Script:Settings["Host"].AnsiEscColor) {
+                    Write-Host -Object ($RED + $Script:r.Errr + $CLEAR) -NoNewline
+                } else {
+                    Write-Host -Object $Script:r.Errr -ForegroundColor Red -NoNewline
+                }
             }
         }
 
         $Message = $Entry.Message
-        
+
         if ($Entry.Exception) {
             $Message += " - $($Script:r.Exception): $($Entry.Exception.Message)"
         }
