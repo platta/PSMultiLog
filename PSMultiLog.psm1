@@ -1202,7 +1202,7 @@ Function Write-FileLog {
     )
 
     Process {
-        Format-LogMessage -Entry $Entry -Type -Exception | Out-File -FilePath $FilePath -Append -Encoding ascii
+        Format-LogMessage -Entry $Entry -Type -Exception | Out-File -FilePath $FilePath -Append -Encoding utf8
     }
 }
 
