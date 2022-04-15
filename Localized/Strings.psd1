@@ -7,7 +7,7 @@ Warning = Warning
 Warn = WARN
 
 Error = Error
-Errr = ERRR
+Errr = ERROR
 
 FileLogUnableToRemoveExistingFile = Unable to remove existing log file.
 FileLogUnableToCreateFile = Unable to create log file.
