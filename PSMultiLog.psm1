@@ -15,7 +15,7 @@ $Script:WriteInformation = $PSVersionTable -ne $null -and $PSVersionTable.PSVers
 
 # Load strings file
 $CurrentPath = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
-Import-LocalizedData -BindingVariable r -FileName Strings.psd1 -BaseDirectory (Join-Path -Path $CurrentPath -ChildPath "Localized")
+Import-LocalizedData -BindingVariable r -FileName Strings.psd1 -BaseDirectory (Join-Path -Path $CurrentPath -ChildPath 'Localized')
 $Script:r = $r
 
 # Array to hold log entries that will be e-mailed when using e-mail logging.
@@ -23,43 +23,43 @@ $Script:LogEntries = @()
 
 # Settings for each of the log types.
 $Script:Settings = @{
-    File = New-Object -TypeName psobject -Property @{
-        Enabled = $false
+    File     = New-Object -TypeName psobject -Property @{
+        Enabled  = $false
         LogLevel = 0
         FilePath = $null
     }
 
-    Email = New-Object -TypeName psobject -Property @{
+    Email    = New-Object -TypeName psobject -Property @{
         Enabled = $false
     }
 
     EventLog = New-Object -TypeName psobject -Property @{
-        Enabled = $false
+        Enabled  = $false
         LogLevel = 0
-        LogName = $null
-        Source = $null
+        LogName  = $null
+        Source   = $null
     }
 
-    Host = New-Object -TypeName psobject -Property @{
-        Enabled = $false
+    Host     = New-Object -TypeName psobject -Property @{
+        Enabled  = $false
         LogLevel = 0
     }
 
     PassThru = New-Object -TypeName psobject -Property @{
-        Enabled = $false
+        Enabled  = $false
         LogLevel = 0
     }
 
-    Slack = New-Object -TypeName psobject -Property @{
-        Enabled = $false
-        LogLevel = 0
-        Uri = ""
-        Channel = ""
-        Username = ""
-        InformationIcon = ""
-        WarningIcon = ""
-        ErrorIcon = ""
-        IncludeTimestamp = $false
+    Slack    = New-Object -TypeName psobject -Property @{
+        Enabled           = $false
+        LogLevel          = 0
+        Uri               = ''
+        Channel           = ''
+        Username          = ''
+        InformationIcon   = ''
+        WarningIcon       = ''
+        ErrorIcon         = ''
+        IncludeTimestamp  = $false
         ChannelAlertLevel = -1
     }
 }
@@ -125,21 +125,22 @@ Function Start-FileLog {
         [string]$FilePath,
 
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel = "Error",
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$LogLevel = 'Error',
 
         [Parameter()]
         [switch]$Append
     )
 
     Process {
-        $Script:Settings["File"].Enabled = $false
+        $Script:Settings['File'].Enabled = $false
 
         # First attempt to remove existing file if necessary
         if (!$Append -and (Test-Path -LiteralPath $FilePath)) {
             try {
                 Remove-Item -LiteralPath $FilePath -Force -ErrorAction Stop
-            } catch {
+            }
+            catch {
                 Write-Error -Exception $_.Exception -Message $Script:r.FileLogUnableToRemoveExistingFile
                 return
             }
@@ -149,15 +150,16 @@ Function Start-FileLog {
         if (!(Test-Path -LiteralPath $FilePath)) {
             try {
                 New-Item -Path $FilePath -ItemType File -Force -ErrorAction Stop | Out-Null
-            } catch {
+            }
+            catch {
                 Write-Error -Exception $_.Exception -Message $Script:r.FileLogUnableToCreateFile
                 return
             }
         }
 
-        $Script:Settings["File"].Enabled = $true
-        $Script:Settings["File"].LogLevel = Get-LogLevel -EntryType $LogLevel
-        $Script:Settings["File"].FilePath = $FilePath
+        $Script:Settings['File'].Enabled = $true
+        $Script:Settings['File'].LogLevel = Get-LogLevel -EntryType $LogLevel
+        $Script:Settings['File'].FilePath = $FilePath
     }
 }
 
@@ -185,8 +187,8 @@ Function Stop-FileLog {
 
     Process {
         if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
-            $Script:Settings["File"].Enabled = $false
-            $Script:Settings["File"].FilePath = $null
+            $Script:Settings['File'].Enabled = $false
+            $Script:Settings['File'].FilePath = $null
         }
     }
 }
@@ -233,7 +235,7 @@ Function Start-EmailLog {
     )
 
     Process {
-        $Script:Settings["Email"].Enabled = $true
+        $Script:Settings['Email'].Enabled = $true
 
         if ($ClearEntryCache) {
             $Script:LogEntries = @()
@@ -280,7 +282,7 @@ Function Stop-EmailLog {
 
     Process {
         if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
-            $Script:Settings["Email"].Enabled = $false
+            $Script:Settings['Email'].Enabled = $false
 
             if (!$RetainEntryCache) {
                 $Script:LogEntries = @()
@@ -371,18 +373,18 @@ Function Send-EmailLog {
         [string]$From,
 
         [Parameter()]
-        [string]$Subject = "",
+        [string]$Subject = '',
 
         [Parameter()]
-        [string]$Message = "",
+        [string]$Message = '',
 
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$TriggerLogLevel = "Error",
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$TriggerLogLevel = 'Error',
 
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$SendLogLevel = "Error",
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$SendLogLevel = 'Error',
 
         [Parameter()]
         [switch]$RetainEntryCache = $false,
@@ -391,24 +393,24 @@ Function Send-EmailLog {
         [switch]$SendOnEmpty = $false,
 
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel = "Error"
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$LogLevel = 'Error'
     )
 
     Begin {
 
         $Bypass = $false
 
-        if ($PSBoundParameters.ContainsKey("LogLevel")) {
+        if ($PSBoundParameters.ContainsKey('LogLevel')) {
             # Deprecated functionality.
-            Write-Warning -Message ([string]::Format($Script:r.Parameter_F0_Deprecated_F1, "LogLevel", "TriggerLogLevel and SendLogLevel"))
+            Write-Warning -Message ([string]::Format($Script:r.Parameter_F0_Deprecated_F1, 'LogLevel', 'TriggerLogLevel and SendLogLevel'))
             $TriggerLogLevel = $LogLevel
             $SendLogLevel = $LogLevel
         }
 
         # Start by checking if anything was logged that fits our trigger level.
         $TriggerLogLevelNumber = Get-LogLevel -EntryType $TriggerLogLevel
-        if ((!$PSBoundParameters.ContainsKey("TriggerLogLevel") -and !$PSBoundParameters.ContainsKey("LogLevel")) -or ($Script:LogEntries | Where-Object -FilterScript { $_.LogLevel -le $TriggerLogLevelNumber })) {
+        if ((!$PSBoundParameters.ContainsKey('TriggerLogLevel') -and !$PSBoundParameters.ContainsKey('LogLevel')) -or ($Script:LogEntries | Where-Object -FilterScript { $_.LogLevel -le $TriggerLogLevelNumber })) {
             if (!$Subject) {
                 $Subject = $Script:r.EmailLogSubject
             }
@@ -427,18 +429,18 @@ Function Send-EmailLog {
                 $EmailBody += $Entries | ConvertTo-HtmlUnorderedList -FormatScript {
                     Param ($Entry)
 
-                    $Line = "[$($Entry.Timestamp.ToString("u"))] - "
+                    $Line = "[$($Entry.Timestamp.ToString('u'))] - "
 
                     switch ($Entry.EntryType) {
-                        "Information" {
+                        'Information' {
                             $Line += "<span style=`"color: Teal`">$($Script:r.Info)</span>"
                         }
 
-                        "Warning" {
+                        'Warning' {
                             $Line += "<span style=`"color: GoldenRod`">$($Script:r.Warn)</span>"
                         }
 
-                        "Error" {
+                        'Error' {
                             $Line += "<span style=`"color: Red`">$($Script:r.Errr)</span>"
                         }
                     }
@@ -449,11 +451,11 @@ Function Send-EmailLog {
                         $Line += "<ul><li>$($Script:r.Message): $($Entry.Exception.Message)</li><li>$($Script:r.Source): $($Entry.Exception.Source)</li><li>$($Script:r.StackTrace):"
 
                         if ($Entry.Exception.StackTrace -and $Entry.Exception.StackTrace.Count -gt 0) {
-                            $Line += "<ul>"
+                            $Line += '<ul>'
                             foreach ($Stack in $Entry.Exception.StackTrace) {
                                 $Line += "<li>$Stack</li>"
                             }
-                            $Line += "</ul>"
+                            $Line += '</ul>'
                         }
 
                         $Line += "</li><li>$($Script:r.TargetSite): $($Entry.Exception.TargetSite)</li></ul>"
@@ -462,14 +464,16 @@ Function Send-EmailLog {
                     $Line
                 }
 
-                $EmailBody += "</div>"
-            } else {
+                $EmailBody += '</div>'
+            }
+            else {
                 $Empty = $true
                 $EmailBody += "<p>$($Script:r.NoEntriesToReport)</p>"
             }
 
-            $EmailBody += "</body>"
-        } else {
+            $EmailBody += '</body>'
+        }
+        else {
             # No events occurred that would trigger us to send an e-mail.
             $Bypass = $true
         }
@@ -534,15 +538,15 @@ Function Start-EventLogLog {
         [string]$Source,
 
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel = "Error",
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$LogLevel = 'Error',
 
         [Parameter()]
-        [string]$LogName = "Application"
+        [string]$LogName = 'Application'
     )
 
     Process {
-        $Script:Settings["EventLog"].Enabled = $false
+        $Script:Settings['EventLog'].Enabled = $false
 
         # Check if the source exists.
         try {
@@ -553,24 +557,27 @@ Function Start-EventLogLog {
                     Write-Error -Message $Script:r.EventLogLogSourceInWrongLog
                     return
                 }
-            } else {
+            }
+            else {
                 # Source does not exist, try to create it.
                 try {
                     New-EventLog -LogName $LogName -Source $Source
-                } catch [System.Exception] {
+                }
+                catch [System.Exception] {
                     Write-Error -Exception $_.Exception -Message $Script:r.EventLogLogUnableToCreateLogOrSource
                     return
                 }
             }
-        } catch [System.Exception] {
+        }
+        catch [System.Exception] {
             Write-Error -Exception $_.Exception -Message $Script:r.EventLogLogUnableToReadLogSources
             return
         }
 
-        $Script:Settings["EventLog"].Enabled = $true
-        $Script:Settings["EventLog"].LogLevel = Get-LogLevel -EntryType $LogLevel
-        $Script:Settings["EventLog"].LogName = $LogName
-        $Script:Settings["EventLog"].Source = $Source
+        $Script:Settings['EventLog'].Enabled = $true
+        $Script:Settings['EventLog'].LogLevel = Get-LogLevel -EntryType $LogLevel
+        $Script:Settings['EventLog'].LogName = $LogName
+        $Script:Settings['EventLog'].Source = $Source
     }
 }
 
@@ -597,9 +604,9 @@ Function Stop-EventLogLog {
 
     Process {
         if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
-            $Script:Settings["EventLog"].Enabled = $false
-            $Script:Settings["EventLog"].LogName = $null
-            $Script:Settings["EventLog"].Source = $null
+            $Script:Settings['EventLog'].Enabled = $false
+            $Script:Settings['EventLog'].LogName = $null
+            $Script:Settings['EventLog'].Source = $null
         }
     }
 }
@@ -633,13 +640,13 @@ Function Start-HostLog {
     [CmdletBinding()]
     Param (
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel = "Error"
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$LogLevel = 'Error'
     )
 
     Process {
-        $Script:Settings["Host"].Enabled = $true
-        $Script:Settings["Host"].LogLevel = Get-LogLevel -EntryType $LogLevel
+        $Script:Settings['Host'].Enabled = $true
+        $Script:Settings['Host'].LogLevel = Get-LogLevel -EntryType $LogLevel
     }
 }
 
@@ -666,7 +673,7 @@ Function Stop-HostLog {
 
     Process {
         if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
-            $Script:Settings["Host"].Enabled = $false
+            $Script:Settings['Host'].Enabled = $false
         }
     }
 }
@@ -703,13 +710,13 @@ Function Start-PassThruLog {
     [CmdletBinding()]
     Param (
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel = "Error"
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$LogLevel = 'Error'
     )
 
     Process {
-        $Script:Settings["PassThru"].Enabled = $true
-        $Script:Settings["PassThru"].LogLevel = Get-LogLevel -EntryType $LogLevel
+        $Script:Settings['PassThru'].Enabled = $true
+        $Script:Settings['PassThru'].LogLevel = Get-LogLevel -EntryType $LogLevel
     }
 }
 
@@ -736,7 +743,7 @@ Function Stop-PassThruLog {
 
     Process {
         if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
-            $Script:Settings["PassThru"].Enabled = $false
+            $Script:Settings['PassThru'].Enabled = $false
         }
     }
 }
@@ -803,8 +810,8 @@ Function Start-SlackLog {
     [CmdletBinding()]
     Param (
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel = "Error",
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$LogLevel = 'Error',
 
         [Parameter(Mandatory = $true)]
         [string]$Uri,
@@ -816,47 +823,50 @@ Function Start-SlackLog {
         [string]$Username,
 
         [Parameter()]
-        [string]$InformationIcon = "speech_balloon",
+        [string]$InformationIcon = 'speech_balloon',
 
         [Parameter()]
-        [string]$WarningIcon = "warning",
+        [string]$WarningIcon = 'warning',
 
         [Parameter()]
-        [string]$ErrorIcon = "rotating_light",
+        [string]$ErrorIcon = 'rotating_light',
 
         [Parameter()]
         [switch]$IncludeTimestamp,
 
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error", "None")]
-        [string]$ChannelAlertLevel = "None"
+        [ValidateSet('Information', 'Warning', 'Error', 'None')]
+        [string]$ChannelAlertLevel = 'None'
     )
 
     Process {
-        $Script:Settings["Slack"].Enabled = $true
-        $Script:Settings["Slack"].LogLevel = Get-LogLevel -EntryType $LogLevel
-        $Script:Settings["Slack"].Uri = $Uri
-        $Script:Settings["Slack"].InformationIcon = $InformationIcon
-        $Script:Settings["Slack"].WarningIcon = $WarningIcon
-        $Script:Settings["Slack"].ErrorIcon = $ErrorIcon
-        $Script:Settings["Slack"].ChannelAlertLevel = Get-LogLevel -EntryType $ChannelAlertLevel
+        $Script:Settings['Slack'].Enabled = $true
+        $Script:Settings['Slack'].LogLevel = Get-LogLevel -EntryType $LogLevel
+        $Script:Settings['Slack'].Uri = $Uri
+        $Script:Settings['Slack'].InformationIcon = $InformationIcon
+        $Script:Settings['Slack'].WarningIcon = $WarningIcon
+        $Script:Settings['Slack'].ErrorIcon = $ErrorIcon
+        $Script:Settings['Slack'].ChannelAlertLevel = Get-LogLevel -EntryType $ChannelAlertLevel
 
         if ($Channel) {
-            $Script:Settings["Slack"].Channel = $Channel
-        } else {
-            $Script:Settings["Slack"].Channel = ""
+            $Script:Settings['Slack'].Channel = $Channel
+        }
+        else {
+            $Script:Settings['Slack'].Channel = ''
         }
 
         if ($Username) {
-            $Script:Settings["Slack"].Username = $Username
-        } else {
-            $Script:Settings["Slack"].Username = ""
+            $Script:Settings['Slack'].Username = $Username
+        }
+        else {
+            $Script:Settings['Slack'].Username = ''
         }
 
         if ($IncludeTimestamp) {
-            $Script:Settings["Slack"].IncludeTimestamp = $true
-        } else {
-            $Script:Settings["Slack"].IncludeTimestamp = $false
+            $Script:Settings['Slack'].IncludeTimestamp = $true
+        }
+        else {
+            $Script:Settings['Slack'].IncludeTimestamp = $false
         }
     }
 }
@@ -884,7 +894,7 @@ Function Stop-SlackLog {
 
     Process {
         if ($PSCmdlet.ShouldProcess($Script:r.CurrentSession)) {
-            $Script:Settings["Slack"].Enabled = $false
+            $Script:Settings['Slack'].Enabled = $false
         }
     }
 }
@@ -937,7 +947,7 @@ Function Write-Log {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true)]
-        [ValidateSet("Information", "Warning", "Error")]
+        [ValidateSet('Information', 'Warning', 'Error')]
         [string]$EntryType,
 
         [Parameter(Mandatory = $true)]
@@ -954,39 +964,39 @@ Function Write-Log {
         $NewEntry = New-Object -TypeName psobject -Property @{
             Timestamp = Get-Date
             EntryType = $EntryType
-            LogLevel = Get-LogLevel -EntryType $EntryType
-            Message = $Message
+            LogLevel  = Get-LogLevel -EntryType $EntryType
+            Message   = $Message
             Exception = $Exception
-            EventId = $EventId
+            EventId   = $EventId
         }
 
         # Log to File
-        if ($Script:Settings["File"].Enabled -and $NewEntry.LogLevel -le $Script:Settings["File"].LogLevel) {
-            Write-FileLog -Entry $NewEntry -FilePath $Script:Settings["File"].FilePath
+        if ($Script:Settings['File'].Enabled -and $NewEntry.LogLevel -le $Script:Settings['File'].LogLevel) {
+            Write-FileLog -Entry $NewEntry -FilePath $Script:Settings['File'].FilePath
         }
 
         # Log to EventLog
-        if ($Script:Settings["EventLog"].Enabled -and $NewEntry.LogLevel -le $Script:Settings["EventLog"].LogLevel) {
-            Write-EventLogLog -Entry $NewEntry -LogName $Script:Settings["EventLog"].LogName -Source $Script:Settings["EventLog"].Source
+        if ($Script:Settings['EventLog'].Enabled -and $NewEntry.LogLevel -le $Script:Settings['EventLog'].LogLevel) {
+            Write-EventLogLog -Entry $NewEntry -LogName $Script:Settings['EventLog'].LogName -Source $Script:Settings['EventLog'].Source
         }
 
         # Record entry for e-mailing later
-        if ($Script:Settings["Email"].Enabled) {
+        if ($Script:Settings['Email'].Enabled) {
             Write-EmailLog -Entry $NewEntry
         }
 
         # Write to host
-        if ($Script:Settings["Host"].Enabled -and $NewEntry.LogLevel -le $Script:Settings["Host"].LogLevel) {
+        if ($Script:Settings['Host'].Enabled -and $NewEntry.LogLevel -le $Script:Settings['Host'].LogLevel) {
             Write-HostLog -Entry $NewEntry
         }
 
         # Pass through to verbose/warning/error streams
-        if ($Script:Settings["PassThru"].Enabled -and $NewEntry.LogLevel -le $Script:Settings["PassThru"].LogLevel) {
+        if ($Script:Settings['PassThru'].Enabled -and $NewEntry.LogLevel -le $Script:Settings['PassThru'].LogLevel) {
             Write-PassThruLog -Entry $NewEntry
         }
 
         # Slack channel logging.
-        if ($Script:Settings["Slack"].Enabled -and $NewEntry.LogLevel -le $Script:Settings["Slack"].LogLevel) {
+        if ($Script:Settings['Slack'].Enabled -and $NewEntry.LogLevel -le $Script:Settings['Slack'].LogLevel) {
             Write-SlackLog -Entry $NewEntry
         }
     }
@@ -1015,25 +1025,25 @@ Function Get-LogLevel {
     [OutputType([int])]
     Param (
         [Parameter(Mandatory = $true)]
-        [ValidateSet("Information", "Warning", "Error", "None")]
+        [ValidateSet('Information', 'Warning', 'Error', 'None')]
         [string]$EntryType
     )
 
     Process {
         switch ($EntryType) {
-            "Information" {
+            'Information' {
                 return 2
             }
 
-            "Warning" {
+            'Warning' {
                 return 1
             }
 
-            "Error" {
+            'Error' {
                 return 0
             }
 
-            "None" {
+            'None' {
                 return -1
             }
         }
@@ -1077,20 +1087,20 @@ Function Format-LogMessage {
     )
 
     Process {
-        $ReturnString = "[$($Entry.Timestamp.ToString("u"))]"
+        $ReturnString = "[$($Entry.Timestamp.ToString('u'))]"
 
         if ($Type) {
-            $TypeString = ""
-            switch($Entry.EntryType) {
-                "Information" {
+            $TypeString = ''
+            switch ($Entry.EntryType) {
+                'Information' {
                     $TypeString = $Script:r.Info
                 }
 
-                "Warning" {
+                'Warning' {
                     $TypeString = $Script:r.Warn
                 }
 
-                "Error" {
+                'Error' {
                     $TypeString = $Script:r.Errr
                 }
             }
@@ -1146,11 +1156,12 @@ Function ConvertTo-HtmlUnorderedList {
 
     Process {
         @($InputObject) | ForEach-Object -Process {
-            $OutputText += "<li>"
+            $OutputText += '<li>'
 
             if ($FormatScript) {
                 $OutputText += Invoke-Command -ScriptBlock $FormatScript
-            } else {
+            }
+            else {
                 $OutputText += $_
             }
 
@@ -1232,10 +1243,10 @@ Function Write-EventLogLog {
 
         if ($Entry.Exception) {
             $EventLogMessage += "`n`n$($Script:r.ExceptionInformation)" + `
-            "`n$($Script:r.Message): $($Entry.Exception.Message)" + `
-            "`n$($Script:r.Source): $($Entry.Exception.Source)" + `
-            "`n$($Script:r.StackTrace): $($Entry.Exception.StackTrace)" + `
-            "`n$($Script:r.TargetSite): $($Entry.Exception.TargetSite)"
+                "`n$($Script:r.Message): $($Entry.Exception.Message)" + `
+                "`n$($Script:r.Source): $($Entry.Exception.Source)" + `
+                "`n$($Script:r.StackTrace): $($Entry.Exception.StackTrace)" + `
+                "`n$($Script:r.TargetSite): $($Entry.Exception.TargetSite)"
         }
 
         Write-EventLog -LogName $LogName -Source $Source -EntryType $Entry.EntryType -EventId $Entry.EventId -Message $EventLogMessage
@@ -1288,18 +1299,18 @@ Function Write-HostLog {
     )
 
     Process {
-        Write-Host -Object "[$($Entry.Timestamp.ToString("u"))] - " -NoNewline
+        Write-Host -Object "[$($Entry.Timestamp.ToString('u'))] - " -NoNewline
 
         switch ($Entry.EntryType) {
-            "Information" {
+            'Information' {
                 Write-Host -Object $Script:r.Info -ForegroundColor Cyan -NoNewline
             }
 
-            "Warning" {
+            'Warning' {
                 Write-Host -Object $Script:r.Warn -ForegroundColor Yellow -NoNewline
             }
 
-            "Error" {
+            'Error' {
                 Write-Host -Object $Script:r.Errr -ForegroundColor Red -NoNewline
             }
         }
@@ -1333,24 +1344,26 @@ Function Write-PassThruLog {
 
     Process {
         switch ($Entry.EntryType) {
-            "Information" {
+            'Information' {
                 # Use the Write-Information Cmdlet introduced in PowerShell
                 # version 5 if available. Otherwise Write-Verbose
                 if ($Script:WriteInformation) {
                     Write-Information -MessageData (Format-LogMessage -Entry $Entry)
-                } else {
+                }
+                else {
                     Write-Verbose -Message (Format-LogMessage -Entry $Entry)
                 }
             }
 
-            "Warning" {
+            'Warning' {
                 Write-Warning -Message (Format-LogMessage -Entry $Entry)
             }
 
-            "Error" {
+            'Error' {
                 if ($Entry.Exception) {
                     Write-Error -Message (Format-LogMessage -Entry $Entry) -Exception $Entry.Exception
-                } else {
+                }
+                else {
                     Write-Error -Message (Format-LogMessage -Entry $Entry)
                 }
             }
@@ -1366,37 +1379,37 @@ Function Write-SlackLog {
     )
 
     Process {
-        $Message = ""
+        $Message = ''
 
-        if ($Entry.LogLevel -le $Script:Settings["Slack"].ChannelAlertLevel) {
-            $Message += "<!channel>: "
+        if ($Entry.LogLevel -le $Script:Settings['Slack'].ChannelAlertLevel) {
+            $Message += '<!channel>: '
         }
 
-        if ($Script:Settings["Slack"].IncludeTimestamp) {
-            $Message += "[$($Entry.Timestamp.ToString("u"))] - " | ConvertTo-SlackEncoding
+        if ($Script:Settings['Slack'].IncludeTimestamp) {
+            $Message += "[$($Entry.Timestamp.ToString('u'))] - " | ConvertTo-SlackEncoding
         }
 
         $Message += $Entry.Message | ConvertTo-SlackEncoding
 
         if ($Entry.Exception) {
             $Message += "`n`n$($Script:r.ExceptionInformation)" + `
-            "`n$($Script:r.Message): $($Entry.Exception.Message)" + `
-            "`n$($Script:r.Source): $($Entry.Exception.Source)" + `
-            "`n$($Script:r.StackTrace): $($Entry.Exception.StackTrace)" + `
-            "`n$($Script:r.TargetSite): $($Entry.Exception.TargetSite)" | ConvertTo-SlackEncoding
+                "`n$($Script:r.Message): $($Entry.Exception.Message)" + `
+                "`n$($Script:r.Source): $($Entry.Exception.Source)" + `
+                "`n$($Script:r.StackTrace): $($Entry.Exception.StackTrace)" + `
+                "`n$($Script:r.TargetSite): $($Entry.Exception.TargetSite)" | ConvertTo-SlackEncoding
         }
 
         switch ($Entry.EntryType) {
-            "Information" {
-                $Icon = $Script:Settings["Slack"].InformationIcon | ConvertTo-SlackEncoding
+            'Information' {
+                $Icon = $Script:Settings['Slack'].InformationIcon | ConvertTo-SlackEncoding
             }
 
-            "Warning" {
-                $Icon = $Script:Settings["Slack"].WarningIcon | ConvertTo-SlackEncoding
+            'Warning' {
+                $Icon = $Script:Settings['Slack'].WarningIcon | ConvertTo-SlackEncoding
             }
 
-            "Error" {
-                $Icon = $Script:Settings["Slack"].ErrorIcon | ConvertTo-SlackEncoding
+            'Error' {
+                $Icon = $Script:Settings['Slack'].ErrorIcon | ConvertTo-SlackEncoding
             }
         }
 
@@ -1404,19 +1417,20 @@ Function Write-SlackLog {
         $Elements += '"text":"' + $Message + '"'
         $Elements += '"icon_emoji":":' + $Icon + ':"'
 
-        if ($Script:Settings["Slack"].Channel) {
-            $Elements += '"channel":"#' + ($Script:Settings["Slack"].Channel | ConvertTo-SlackEncoding) + '"'
+        if ($Script:Settings['Slack'].Channel) {
+            $Elements += '"channel":"#' + ($Script:Settings['Slack'].Channel | ConvertTo-SlackEncoding) + '"'
         }
 
-        if ($Script:Settings["Slack"].Username) {
-            $Elements += '"username":"' + ($Script:Settings["Slack"].Username | ConvertTo-SlackEncoding) + '"'
+        if ($Script:Settings['Slack'].Username) {
+            $Elements += '"username":"' + ($Script:Settings['Slack'].Username | ConvertTo-SlackEncoding) + '"'
         }
 
         $Body = "payload={$([string]::Join(',', $Elements))}"
 
         try {
-            Invoke-WebRequest -Uri $Script:Settings["Slack"].Uri -Method Post -Body $Body -ErrorAction Stop | Out-Null
-        } catch {
+            Invoke-WebRequest -Uri $Script:Settings['Slack'].Uri -Method Post -Body $Body -ErrorAction Stop | Out-Null
+        }
+        catch {
             Write-Error -Exception $_.Exception -Message "Exception while posting log to Slack. Message is '$($_.Exception.Message)'."
         }
     }
@@ -1492,11 +1506,12 @@ Function ConvertTo-HtmlUnorderedList {
 
     Process {
         @($InputObject) | ForEach-Object -Process {
-            $OutputText += "<li>"
+            $OutputText += '<li>'
 
             if ($FormatScript) {
                 $OutputText += Invoke-Command -ScriptBlock $FormatScript -ArgumentList $_
-            } else {
+            }
+            else {
                 $OutputText += $_
             }
 
@@ -1532,7 +1547,7 @@ Function Get-LogName {
     )
 
     Process {
-        return [System.Diagnostics.EventLog]::LogNameFromSourceName($Source, ".")
+        return [System.Diagnostics.EventLog]::LogNameFromSourceName($Source, '.')
     }
 }
 
@@ -1547,15 +1562,15 @@ Function Enable-FileLog {
         [string]$FilePath,
 
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel = "Error",
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$LogLevel = 'Error',
 
         [Parameter()]
         [switch]$Append
     )
 
     Process {
-        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Start-FileLog"))
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, 'Start-FileLog'))
         Start-FileLog -FilePath $FilePath -LogLevel $LogLevel -Append:$Append
     }
 }
@@ -1565,7 +1580,7 @@ Function Disable-FileLog {
     Param ()
 
     Process {
-        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Stop-FileLog"))
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, 'Stop-FileLog'))
         Stop-FileLog
     }   
 }
@@ -1578,7 +1593,7 @@ Function Enable-EmailLog {
     )
 
     Process {
-        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Start-EmailLog"))
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, 'Start-EmailLog'))
         Start-EmailLog -ClearEntryCache:$ClearEntryCache
     }
 }
@@ -1591,7 +1606,7 @@ Function Disable-EmailLog {
     )
 
     Process {
-        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Stop-EmailLog"))
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, 'Stop-EmailLog'))
         Stop-EmailLog
     }
 }
@@ -1603,15 +1618,15 @@ Function Enable-EventLogLog {
         [string]$Source,
 
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel = "Error",
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$LogLevel = 'Error',
 
         [Parameter()]
-        [string]$LogName = "Application"
+        [string]$LogName = 'Application'
     )
 
     Process {
-        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Start-EventLogLog"))
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, 'Start-EventLogLog'))
         Start-EventLogLog -Source $Source -LogLevel $LogLevel -LogName $LogName
     }
 }
@@ -1621,7 +1636,7 @@ Function Disable-EventLogLog {
     Param ()
 
     Process {
-        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Stop-EventLogLog"))
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, 'Stop-EventLogLog'))
         Stop-EventLogLog
     }
 }
@@ -1630,12 +1645,12 @@ Function Enable-HostLog {
     [CmdletBinding()]
     Param (
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel = "Error"
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$LogLevel = 'Error'
     )
 
     Process {
-        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Start-HostLog"))
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, 'Start-HostLog'))
         Enable-HostlLog -LogLevel $LogLevel
     }
 }
@@ -1645,7 +1660,7 @@ Function Disable-HostLog {
     Param ()
 
     Process {
-        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Stop-HostLog"))
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, 'Stop-HostLog'))
         Stop-HostLog
     }
 }
@@ -1654,12 +1669,12 @@ Function Enable-PassThruLog {
     [CmdletBinding()]
     Param (
         [Parameter()]
-        [ValidateSet("Information", "Warning", "Error")]
-        [string]$LogLevel = "Error"
+        [ValidateSet('Information', 'Warning', 'Error')]
+        [string]$LogLevel = 'Error'
     )
 
     Process {
-        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Start-PassThruLog"))
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, 'Start-PassThruLog'))
         Start-PassThruLog -LogLevel $LogLevel
     }
 }
@@ -1669,7 +1684,7 @@ Function Disable-PassThruLog {
     Param ()
 
     Process {
-        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, "Stop-PassThruLog"))
+        Write-Warning -Message ([string]::Format($Script:r.CmdletDeprecated_F0, 'Stop-PassThruLog'))
         Stop-PassThruLog
     }
 }
